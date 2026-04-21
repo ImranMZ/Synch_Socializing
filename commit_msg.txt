@@ -1,0 +1,12 @@
+feat: Integrate AI features with toggle, poetic responses, and bug fixes
+
+- Add AI toggle on homepage (ON/OFF, defaults to ON)
+- Quiz modal appears before matching when AI is ON
+- Add 3 AI action buttons: Why Match, Wavelength, Predict
+- Connect button opens icebreakers modal
+- Basic matching works when AI is OFF
+- Fix backend endpoint models for proper AI responses
+- Make AI responses concise and philosophically poetic
+- Remove month-by-month prediction, use 3-line destiny format
+- Fix Wavelength chart data structure
+- Add fallback handling for AI response errors
