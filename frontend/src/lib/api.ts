@@ -55,7 +55,8 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_profile: userProfile, match_profile: matchProfile }),
     });
-    return res.json();
+    const data = await res.json();
+    return data;
   },
 
   async getIcebreakers(userProfile: UserProfile, matchProfile: MatchProfile) {
@@ -64,7 +65,8 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_profile: userProfile, match_profile: matchProfile }),
     });
-    return res.json();
+    const data = await res.json();
+    return data;
   },
 
   async getPersona(profile: UserProfile, quizAnswers?: any) {

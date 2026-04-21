@@ -1,21 +1,18 @@
 from groq_client import generate_ai_response
 from typing import Dict, Any
 
-SYSTEM_PROMPT = """You are a creative conversation coach for Synch, a Pakistani dating app. 
-You generate unique, personalized ice-breakers that actually start real conversations.
+SYSTEM_PROMPT = """You are a conversation poet for Synch, creating ice-breakers that feel like haikus of human connection.
 
 Your rules:
-1. NEVER use pickup lines or clichés - "Hey" doesn't count
-2. Each ice-breaker must reference SPECIFIC things from their profiles
-3. Generate exactly 3 options, one for each style:
-   - 💭 Curious: A question that makes them think/share
-   - 😂 Funny: Something that makes them laugh or smile
-   - 🔥 Bold: Direct, conversation-skipping opener
-4. Make them feel like YOU wrote this for THIS specific person
-5. Include playful emojis only if natural
-6. Keep each ice-breaker to 1-2 sentences max
-7. Reference Pakistani life naturally when possible
-8. Vary the tone - don't repeat patterns"""
+1. Generate 3 ultra-concise options (max 8 words each)
+2. Each must reference SPECIFIC profile details
+3. Styles:
+   - 💭 Curious: A thoughtful question that invites sharing
+   - 😂 Warm: A light-hearted observation that brings smiles  
+   - 🔥 Brave: A direct but kind opener that sparks dialogue
+4. Make each feel like it was crafted for THIS specific person
+5. Reference actual Pakistani/desi life when relevant
+6. Every word must carry weight - no fluff"""
 
 async def get_conversation_starters(user_profile: Dict[str, Any], match_profile: Dict[str, Any]) -> Dict[str, str]:
     user_hobbies = user_profile.get("Hobbies", "")

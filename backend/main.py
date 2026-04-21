@@ -46,6 +46,14 @@ class PsychographicRequest(BaseModel):
     profile: UserProfile
     quiz_answers: list[QuizAnswer]
 
+class MatchRequest(BaseModel):
+    user_profile: UserProfile
+    match_profile: dict
+
+class QuizWithProfileRequest(BaseModel):
+    profile: UserProfile
+    quiz_answers: list
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Synch API", "total_profiles": len(df)}
@@ -57,17 +65,12 @@ def get_stats():
     return engine.get_stats()
 
 @app.post("/api/match")
-def match_profiles(profile: UserProfile, psychographic: dict = None):
+def match_profiles(request: dict):
     if engine is None:
         return {"error": "Dataset or MatchEngine not loaded."}
     
+    profile = UserProfile(**request)
     psycho_profile = None
-    if psychographic:
-        from ml.quiz_engine import process_quiz_answers, PsychographicProfile
-        answers = psychographic.get("quiz_answers", [])
-        if answers:
-            processed = process_quiz_answers([QuizAnswer(**a) for a in answers])
-            psycho_profile = processed.to_weight_vector()
     
     top_matches = engine.find_matches(profile.dict(), psychographic_profile=psycho_profile)
     return top_matches
@@ -96,23 +99,23 @@ from services.wavelength import calculate_wavelength
 from services.predictor import predict_match_future
 
 @app.post("/api/explain-match")
-async def explain_match(user_profile: UserProfile, match_profile: dict):
-    explanation = await get_match_explanation(user_profile.dict(), match_profile)
+async def explain_match(request: MatchRequest):
+    explanation = await get_match_explanation(request.user_profile.dict(), request.match_profile)
     return {"explanation": explanation}
 
 @app.post("/api/icebreakers")
-async def get_icebreakers(user_profile: UserProfile, match_profile: dict):
-    starters = await get_conversation_starters(user_profile.dict(), match_profile)
+async def get_icebreakers(request: MatchRequest):
+    starters = await get_conversation_starters(request.user_profile.dict(), request.match_profile)
     return starters
 
 @app.post("/api/persona")
-async def get_persona(profile: UserProfile, quiz_answers: list = None):
-    persona = await generate_persona(profile.dict(), quiz_answers)
+async def get_persona(request: QuizWithProfileRequest):
+    persona = await generate_persona(request.profile.dict(), request.quiz_answers)
     return persona
 
 @app.post("/api/bio-generator")
-async def create_bio(profile: UserProfile, style: str = "warm"):
-    bios = await generate_bio(profile.dict(), style)
+async def create_bio(profile: UserProfile):
+    bios = await generate_bio(profile.dict(), "warm")
     return bios
 
 @app.post("/api/dealbreakers")
@@ -126,11 +129,11 @@ async def get_discovery(profile: UserProfile):
     return result
 
 @app.post("/api/wavelength")
-async def get_wavelength(user_profile: UserProfile, match_profile: dict):
-    result = await calculate_wavelength(user_profile.dict(), match_profile)
+async def get_wavelength(request: MatchRequest):
+    result = await calculate_wavelength(request.user_profile.dict(), request.match_profile)
     return result
 
 @app.post("/api/predict")
-async def get_prediction(user_profile: UserProfile, match_profile: dict):
-    result = await predict_match_future(user_profile.dict(), match_profile)
+async def get_prediction(request: MatchRequest):
+    result = await predict_match_future(request.user_profile.dict(), request.match_profile)
     return result

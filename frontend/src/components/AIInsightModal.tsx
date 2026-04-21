@@ -149,8 +149,17 @@ export default function AIInsightModal({ isOpen, onClose, type, data, loading }:
             )}
 
             {type === "wavelength" && data?.dimensions && (
-              <WavelengthChart data={data.dimensions} overall={data.overall} />
-            )}
+               <WavelengthChart 
+                 data={{
+                   vibe_sync: data.dimensions.vibe_sync?.score || 0,
+                   lifestyle: data.dimensions.lifestyle?.score || 0,
+                   communication: data.dimensions.communication?.score || 0,
+                   goals: data.dimensions.goals?.score || 0,
+                   curiosity: data.dimensions.curiosity?.score || 0
+                 }}
+                 overall={data.overall || 0}
+               />
+             )}
 
             {type === "persona" && data && (
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-4">

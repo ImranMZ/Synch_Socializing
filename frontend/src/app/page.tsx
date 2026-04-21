@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Heart, ChevronRight, X, Sparkles, Activity, Check } from "lucide-react";
+import { User, Heart, ChevronRight, X, Sparkles, Activity, Check, Lightbulb, TrendingUp, Zap } from "lucide-react";
+import AIInsightModal from "../components/AIInsightModal";
+import VibeQuizModal from "../components/VibeQuizModal";
+import { api, UserProfile, MatchProfile } from "../lib/api";
 
 type Match = {
   Name: string;
@@ -46,6 +49,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [stats, setStats] = useState<any>(null);
+  const [psychographicProfile, setPsychographicProfile] = useState<any>(null);
+  
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiModalType, setAiModalType] = useState<"explanation" | "icebreakers" | "wavelength" | "persona" | "bio" | "prediction" | "dealbreakers" | "discovery">("explanation");
+  const [aiModalData, setAiModalData] = useState<any>(null);
+  const [aiModalLoading, setAiModalLoading] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/stats")
@@ -67,28 +78,97 @@ export default function Home() {
     }
   };
 
+  const handleQuizComplete = async (answers: { question_id: string; answer: string }[]) => {
+    const profile: UserProfile = {
+      Vibe: formData.Vibe,
+      Goal: formData.Goal,
+      Hobbies: formData.Hobbies.join(", "),
+      Smoking: formData.Smoking,
+      Diet: formData.Diet,
+      Religiosity: formData.Religiosity,
+      Comm_Style: formData.Comm_Style,
+      City: formData.City,
+      strict_city: false,
+    };
+    
+    try {
+      const result = await api.submitQuiz(profile, answers);
+      setPsychographicProfile(result.psychographic_profile);
+    } catch (e) {
+      console.error("Quiz submit error:", e);
+    }
+    handleMatch();
+  };
+
   const handleMatch = async () => {
     setLoading(true);
-    setStep(3); // Loading / Matching step
+    setStep(3);
     
-    // Convert array of hobbies to comma separated string for the backend
-    const payload = {
-      ...formData,
-      Hobbies: formData.Hobbies.join(", ")
+    const payload: UserProfile = {
+      Vibe: formData.Vibe,
+      Goal: formData.Goal,
+      Hobbies: formData.Hobbies.join(", "),
+      Smoking: formData.Smoking,
+      Diet: formData.Diet,
+      Religiosity: formData.Religiosity,
+      Comm_Style: formData.Comm_Style,
+      City: formData.City,
+      strict_city: false,
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/match", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
+      const data = await api.matchProfiles(payload, psychographicProfile);
       setMatches(data);
     } catch (error) {
       console.error(error);
     }
     setLoading(false);
+  };
+
+  const openAIModal = async (type: "explanation" | "icebreakers" | "wavelength" | "prediction", match?: Match) => {
+    setAiModalType(type);
+    setAiModalOpen(true);
+    setAiModalData(null);
+    setAiModalLoading(true);
+
+    const profile: UserProfile = {
+      Vibe: formData.Vibe,
+      Goal: formData.Goal,
+      Hobbies: formData.Hobbies.join(", "),
+      Smoking: formData.Smoking,
+      Diet: formData.Diet,
+      Religiosity: formData.Religiosity,
+      Comm_Style: formData.Comm_Style,
+      City: formData.City,
+      strict_city: false,
+    };
+
+    try {
+      let result;
+      if (match) {
+        const matchProfile: MatchProfile = {
+          Name: match.Name,
+          Compatibility_Score: match.Compatibility_Score,
+          Gender: match.Gender,
+          Age: match.Age,
+          Location: match.Location,
+          Education: match.Education,
+          Profession: match.Profession,
+          Vibe: match.Vibe,
+          Hobbies: match.Hobbies,
+        };
+        
+        if (type === "explanation") result = await api.getMatchExplanation(profile, matchProfile);
+        else if (type === "icebreakers") result = await api.getIcebreakers(profile, matchProfile);
+        else if (type === "wavelength") result = await api.getWavelength(profile, matchProfile);
+        else if (type === "prediction") result = await api.getPrediction(profile, matchProfile);
+      }
+      setAiModalData(result || { error: "No data" });
+    } catch (e) {
+      console.error("AI modal error:", e);
+      setAiModalData({ error: "Failed to load" });
+    }
+    setAiModalLoading(false);
   };
 
   const handleSkip = () => {
@@ -118,7 +198,19 @@ export default function Home() {
           <motion.div key="step0" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md flex flex-col items-center">
             <Sparkles className="w-16 h-16 mb-6 text-blue-500" />
             <h1 className="text-4xl font-bold mb-2 tracking-tight">Synch</h1>
-            <p className="text-[#8E8E93] mb-12 text-center text-lg">Who are you looking for today?</p>
+            
+            <div className="flex items-center gap-3 mb-6 px-4 py-2 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10">
+              <span className={`text-sm font-medium ${aiEnabled ? 'text-blue-500' : 'text-[#8E8E93]'}`}>AI Features</span>
+              <button 
+                onClick={() => setAiEnabled(!aiEnabled)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${aiEnabled ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+              >
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
+              </button>
+              <span className={`text-xs ${aiEnabled ? 'text-blue-500' : 'text-[#8E8E93]'}`}>{aiEnabled ? 'ON' : 'OFF'}</span>
+            </div>
+            
+            <p className="text-[#8E8E93] mb-8 text-center text-lg">Who are you looking for today?</p>
             
             <div className="w-full flex flex-col gap-4">
               <button 
@@ -315,7 +407,7 @@ export default function Home() {
             ))}
 
             <button 
-              onClick={handleMatch}
+              onClick={() => aiEnabled ? setQuizModalOpen(true) : handleMatch()}
               className="w-full bg-blue-500 text-white py-4 rounded-full font-semibold text-lg shadow-lg shadow-blue-500/40 mt-4 flex items-center justify-center gap-2"
             >
               <Sparkles className="w-5 h-5" />
@@ -381,7 +473,33 @@ export default function Home() {
                   </motion.div>
                 </AnimatePresence>
 
-                <div className="flex gap-4 mt-8">
+                {aiEnabled && (
+                <div className="grid grid-cols-3 gap-2 mt-6">
+                  <button 
+                    onClick={() => openAIModal("explanation", matches[currentIndex])}
+                    className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 hover:bg-yellow-500/20 transition-colors"
+                  >
+                    <Lightbulb className="w-5 h-5 text-yellow-600" />
+                    <span className="text-xs font-medium text-yellow-700">Why match?</span>
+                  </button>
+                  <button 
+                    onClick={() => openAIModal("wavelength", matches[currentIndex])}
+                    className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 hover:bg-purple-500/20 transition-colors"
+                  >
+                    <TrendingUp className="w-5 h-5 text-purple-600" />
+                    <span className="text-xs font-medium text-purple-700">Wavelength</span>
+                  </button>
+                  <button 
+                    onClick={() => openAIModal("prediction", matches[currentIndex])}
+                    className="bg-pink-500/10 border border-pink-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 hover:bg-pink-500/20 transition-colors"
+                  >
+                    <Zap className="w-5 h-5 text-pink-600" />
+                    <span className="text-xs font-medium text-pink-700">Predict</span>
+                  </button>
+                </div>
+                )}
+
+                <div className="flex gap-4 mt-6">
                   <button 
                     onClick={handleSkip}
                     className="flex-1 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md border border-black/5 dark:border-white/10 p-4 rounded-full flex justify-center items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-semibold"
@@ -390,6 +508,7 @@ export default function Home() {
                     Skip
                   </button>
                   <button 
+                    onClick={() => aiEnabled ? openAIModal("icebreakers", matches[currentIndex]) : alert("Connect request sent! Chat coming soon.")}
                     className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-full flex justify-center items-center gap-2 font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
                   >
                     <Heart className="w-5 h-5" fill="currentColor" />
@@ -416,6 +535,20 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <VibeQuizModal
+        isOpen={quizModalOpen}
+        onClose={() => setQuizModalOpen(false)}
+        onComplete={handleQuizComplete}
+      />
+
+      <AIInsightModal
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        type={aiModalType}
+        data={aiModalData}
+        loading={aiModalLoading}
+      />
     </div>
   );
 }
