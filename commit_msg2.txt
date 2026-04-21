@@ -1,1 +1,0 @@
-docs: Update README with features and add weekly development report

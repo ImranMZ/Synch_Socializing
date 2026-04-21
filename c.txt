@@ -1,0 +1,1 @@
+chore: Remove batch file and temp files
