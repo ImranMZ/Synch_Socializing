@@ -15,16 +15,13 @@ class MatchEngine:
             self._train_model()
 
     def _train_model(self):
-        # Define features for the ML model
         self.categorical_features = ['Vibe', 'Religiosity', 'Smoking', 'Diet', 'Comm_Style', 'City']
         self.text_features = 'Hobbies'
         
-        # Clean data safely
         for col in self.categorical_features:
             self.df[col] = self.df[col].fillna("Unknown")
         self.df[self.text_features] = self.df[self.text_features].fillna("")
 
-        # Create preprocessor pipeline
         self.preprocessor = ColumnTransformer(
             transformers=[
                 ('cat', OneHotEncoder(handle_unknown='ignore'), self.categorical_features),
@@ -33,14 +30,11 @@ class MatchEngine:
             remainder='drop'
         )
 
-        # Transform data into high-dimensional space
         X = self.preprocessor.fit_transform(self.df)
-        
-        # Fit NearestNeighbors using Cosine Distance
         self.model = NearestNeighbors(n_neighbors=50, metric='cosine', algorithm='brute')
         self.model.fit(X)
 
-    def find_matches(self, user_profile: dict) -> list:
+    def find_matches(self, user_profile: dict, psychographic_profile: dict = None) -> list:
         if self.df.empty or self.model is None:
             return []
             
@@ -53,23 +47,46 @@ class MatchEngine:
             user_df[self.text_features] = ""
             
         user_vector = self.preprocessor.transform(user_df)
+        
+        if psychographic_profile:
+            user_vector = self._apply_psychographic_boost(user_vector, psychographic_profile)
+        
         distances, indices = self.model.kneighbors(user_vector)
         
         matches = self.df.iloc[indices[0]].copy()
         similarity_scores = (1 - distances[0]) * 100
         matches['Compatibility_Score'] = np.round(similarity_scores, 1)
         
-        # Strict Filtering: Only show people looking for the same Goal
         user_goal = user_profile.get('Goal', 'Both')
         if user_goal != 'Both':
             matches = matches[(matches['Goal'] == user_goal) | (matches['Goal'] == 'Both')]
             
-        # Strict City Filtering
         if user_profile.get('strict_city') and user_profile.get('City'):
             matches = matches[matches['City'] == user_profile['City']]
             
         matches = matches.head(10).fillna("")
         return matches.to_dict(orient="records")
+    
+    def _apply_psychographic_boost(self, user_vector, profile: dict):
+        base_scores = user_vector.toarray()[0].copy()
+        
+        weight_strength = 0.15
+        
+        weights = np.array([
+            profile.get('nocturnality', 0.5),
+            profile.get('social_energy', 0.5),
+            profile.get('spontaneity', 0.5),
+            profile.get('depth', 0.5),
+            profile.get('assertiveness', 0.5)
+        ])
+        
+        normalized_weights = (weights - 0.5) * weight_strength + 1.0
+        
+        boost_factor = np.mean(normalized_weights)
+        
+        adjusted = base_scores * boost_factor
+        
+        return adjusted
         
     def get_stats(self) -> dict:
         if self.df.empty:
