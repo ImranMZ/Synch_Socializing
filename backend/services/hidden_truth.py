@@ -123,31 +123,37 @@ Make it uncomfortably accurate. Make it theirs only. Make it memorable."""
     response = await generate_ai_response(SYSTEM_PROMPT, user_message, temperature=1.2, max_tokens=500)
     
     layer_one = starter_one
-    layer_two = starter_two  
     layer_three = starter_three
     
     lines = response.strip().split("\n")
     current_layer = 0
     
+    parsed_layers = {1: [], 2: [], 3: []}
+    
     for line in lines:
         line = line.strip()
         if not line:
             continue
-        if "Layer One" in line or "🌑" in line:
+            
+        # Detect headers
+        if any(h in line for h in ["Layer One", "🌑", "Layer 1"]):
             current_layer = 1
-            layer_one = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌑", "").strip()
-        elif "Layer Two" in line or "🌘" in line:
+            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌑", "").replace("Layer One", "").replace("Layer 1", "").strip()
+            if content: parsed_layers[1].append(content)
+        elif any(h in line for h in ["Layer Two", "🌘", "Layer 2"]):
             current_layer = 2
-            layer_two = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌘", "").strip()
-        elif "Layer Three" in line or "🌕" in line:
+            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌘", "").replace("Layer Two", "").replace("Layer 2", "").strip()
+            if content: parsed_layers[2].append(content)
+        elif any(h in line for h in ["Layer Three", "🌕", "Layer 3"]):
             current_layer = 3
-            layer_three = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌕", "").strip()
-        elif current_layer == 1 and layer_one:
-            layer_one += " " + line
-        elif current_layer == 2 and layer_two:
-            layer_two += " " + line
-        elif current_layer == 3 and layer_three:
-            layer_three += " " + line
+            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌕", "").replace("Layer Three", "").replace("Layer 3", "").strip()
+            if content: parsed_layers[3].append(content)
+        elif current_layer > 0:
+            parsed_layers[current_layer].append(line)
+            
+    layer_one = " ".join(parsed_layers[1]) if parsed_layers[1] else starter_one
+    layer_two = " ".join(parsed_layers[2]) if parsed_layers[2] else starter_two
+    layer_three = " ".join(parsed_layers[3]) if parsed_layers[3] else starter_three
     
     return {
         "layer_one": layer_one.strip(),

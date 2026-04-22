@@ -63,7 +63,7 @@ export default function Home() {
   const [aiEnabled, setAiEnabled] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/stats")
+    fetch("http://127.0.0.1:8001/api/stats")
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(console.error);
@@ -92,7 +92,7 @@ export default function Home() {
     };
     
     try {
-      const result = await api.getHiddenTruth(profile, psychographicProfile);
+      const result = await api.getHiddenTruth(profile, psychographicProfile || []);
       setHiddenTruthData(result);
     } catch (e) {
       console.error("Hidden truth error:", e);
