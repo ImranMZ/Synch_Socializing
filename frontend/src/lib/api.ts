@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8001";
 
 export interface UserProfile {
   Vibe: string;
@@ -91,7 +91,7 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/dealbreakers`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
+      body: JSON.stringify({ profile }),
     });
     return res.json();
   },
@@ -100,7 +100,7 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/discover`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
+      body: JSON.stringify({ profile }),
     });
     return res.json();
   },
@@ -119,6 +119,15 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_profile: userProfile, match_profile: matchProfile }),
+    });
+    return res.json();
+  },
+
+  async getHiddenTruth(profile: UserProfile, quizAnswers?: any) {
+    const res = await fetch(`${API_BASE}/api/hidden-truth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile, quiz_answers: quizAnswers }),
     });
     return res.json();
   },

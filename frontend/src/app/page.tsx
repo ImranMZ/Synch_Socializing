@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Heart, ChevronRight, X, Sparkles, Activity, Check, Lightbulb, TrendingUp, Zap } from "lucide-react";
 import AIInsightModal from "../components/AIInsightModal";
 import VibeQuizModal from "../components/VibeQuizModal";
+import HiddenTruthModal from "../components/HiddenTruthModal";
 import { api, UserProfile, MatchProfile } from "../lib/api";
 
 type Match = {
@@ -53,6 +54,9 @@ export default function Home() {
   
   const [quizModalOpen, setQuizModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [hiddenTruthOpen, setHiddenTruthOpen] = useState(false);
+  const [hiddenTruthData, setHiddenTruthData] = useState<any>(null);
+  const [hiddenTruthLoading, setHiddenTruthLoading] = useState(false);
   const [aiModalType, setAiModalType] = useState<"explanation" | "icebreakers" | "wavelength" | "persona" | "bio" | "prediction" | "dealbreakers" | "discovery">("explanation");
   const [aiModalData, setAiModalData] = useState<any>(null);
   const [aiModalLoading, setAiModalLoading] = useState(false);
@@ -68,6 +72,36 @@ export default function Home() {
   const handleSelectGoal = (goal: string) => {
     setFormData({ ...formData, Goal: goal });
     setStep(1);
+  };
+
+  const fetchHiddenTruth = async () => {
+    setHiddenTruthOpen(true);
+    setHiddenTruthLoading(true);
+    setHiddenTruthData(null);
+    
+    const profile: UserProfile = {
+      Vibe: formData.Vibe,
+      Goal: formData.Goal,
+      Hobbies: formData.Hobbies.join(", "),
+      Smoking: formData.Smoking,
+      Diet: formData.Diet,
+      Religiosity: formData.Religiosity,
+      Comm_Style: formData.Comm_Style,
+      City: formData.City,
+      strict_city: false,
+    };
+    
+    try {
+      const result = await api.getHiddenTruth(profile, psychographicProfile);
+      setHiddenTruthData(result);
+    } catch (e) {
+      console.error("Hidden truth error:", e);
+    }
+    setHiddenTruthLoading(false);
+  };
+
+  const handleRegenerateTruth = async () => {
+    await fetchHiddenTruth();
   };
 
   const toggleHobby = (hobby: string) => {
@@ -413,6 +447,15 @@ export default function Home() {
               <Sparkles className="w-5 h-5" />
               Find My Match
             </button>
+            
+            {aiEnabled && (
+              <button 
+                onClick={fetchHiddenTruth}
+                className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 py-3 rounded-full font-medium mt-3 flex items-center justify-center gap-2"
+              >
+                Reveal My Hidden Truth
+              </button>
+            )}
           </motion.div>
         )}
 
@@ -548,6 +591,14 @@ export default function Home() {
         type={aiModalType}
         data={aiModalData}
         loading={aiModalLoading}
+      />
+
+      <HiddenTruthModal
+        isOpen={hiddenTruthOpen}
+        onClose={() => setHiddenTruthOpen(false)}
+        onRegenerate={handleRegenerateTruth}
+        data={hiddenTruthData}
+        loading={hiddenTruthLoading}
       />
     </div>
   );

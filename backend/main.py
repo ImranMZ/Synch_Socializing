@@ -97,6 +97,7 @@ from services.detector import analyze_dealbreakers
 from services.discovery import discover_interests
 from services.wavelength import calculate_wavelength
 from services.predictor import predict_match_future
+from services.hidden_truth import generate_hidden_truth
 
 @app.post("/api/explain-match")
 async def explain_match(request: MatchRequest):
@@ -136,4 +137,9 @@ async def get_wavelength(request: MatchRequest):
 @app.post("/api/predict")
 async def get_prediction(request: MatchRequest):
     result = await predict_match_future(request.user_profile.dict(), request.match_profile)
+    return result
+
+@app.post("/api/hidden-truth")
+async def get_hidden_truth(request: QuizWithProfileRequest):
+    result = await generate_hidden_truth(request.profile.dict(), request.quiz_answers)
     return result
