@@ -11,6 +11,7 @@ interface AIInsightModalProps {
   type: "explanation" | "icebreakers" | "wavelength" | "persona" | "bio" | "prediction" | "dealbreakers" | "discovery";
   data: any;
   loading?: boolean;
+  goal?: string;
 }
 
 const typeConfig = {
@@ -56,9 +57,26 @@ const typeConfig = {
   },
 };
 
-export default function AIInsightModal({ isOpen, onClose, type, data, loading }: AIInsightModalProps) {
+function getConfig(type: string, goal?: string) {
+  const base = typeConfig[type as keyof typeof typeConfig];
+  if (type === "prediction") {
+    return {
+      ...base,
+      title: goal === "Partner" ? "If You Two Dated..." : "As Friends...",
+    };
+  }
+  if (type === "explanation") {
+    return {
+      ...base,
+      title: goal === "Partner" ? "Why You Click" : "Why You'd Click",
+    };
+  }
+  return base;
+}
+
+export default function AIInsightModal({ isOpen, onClose, type, data, loading, goal = "Partner" }: AIInsightModalProps) {
   const [copied, setCopied] = useState<string | null>(null);
-  const config = typeConfig[type];
+  const config = getConfig(type, goal);
   const Icon = config.icon;
 
   if (!isOpen) return null;
@@ -79,74 +97,74 @@ export default function AIInsightModal({ isOpen, onClose, type, data, loading }:
         onClick={onClose}
       />
 
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="relative w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-[40px] p-6 shadow-2xl"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-        >
-          <X className="w-5 h-5 text-[#8E8E93]" />
-        </button>
+       <motion.div
+         initial={{ scale: 0.95, opacity: 0, y: 20 }}
+         animate={{ scale: 1, opacity: 1, y: 0 }}
+         exit={{ scale: 0.95, opacity: 0, y: 20 }}
+         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-[40px] p-6 sm:p-8 shadow-2xl"
+       >
+         <button
+           onClick={onClose}
+           className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+         >
+           <X className="w-6 h-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+         </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center`}>
-            <Icon className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-xl font-bold">{config.title}</h2>
-        </div>
+         <div className="flex items-center gap-4 mb-6">
+           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center shadow-lg`}>
+             <Icon className="w-6 h-6 text-white" />
+           </div>
+           <h2 className="text-2xl font-bold">{config.title}</h2>
+         </div>
 
-        {loading ? (
-          <div className="flex flex-col items-center py-12">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full"
-            />
-            <p className="mt-4 text-[#8E8E93]">Generating insights...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {type === "explanation" && data?.explanation && (
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-4">
-                <p className="text-sm leading-relaxed">{data.explanation}</p>
-              </div>
-            )}
+         {loading ? (
+           <div className="flex flex-col items-center py-16">
+             <motion.div
+               animate={{ rotate: 360 }}
+               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+               className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full"
+             />
+             <p className="mt-4 text-gray-500 dark:text-gray-400">Generating insights...</p>
+           </div>
+         ) : (
+           <div className="space-y-4">
+             {type === "explanation" && data?.explanation && (
+               <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6">
+                 <p className="text-base leading-relaxed">{data.explanation}</p>
+               </div>
+             )}
 
-            {type === "icebreakers" && data && (
-              <div className="space-y-3">
-                {data.curious && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">💭</span>
-                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Curious</span>
-                    </div>
-                    <p className="text-sm">{data.curious}</p>
-                  </div>
-                )}
-                {data.funny && (
-                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">😂</span>
-                      <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Funny</span>
-                    </div>
-                    <p className="text-sm">{data.funny}</p>
-                  </div>
-                )}
-                {data.bold && (
-                  <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🔥</span>
-                      <span className="text-sm font-medium text-red-600 dark:text-red-400">Bold</span>
-                    </div>
-                    <p className="text-sm">{data.bold}</p>
-                  </div>
-                )}
-              </div>
-            )}
+             {type === "icebreakers" && data && (
+               <div className="space-y-4">
+                 {data.curious && (
+                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5">
+                     <div className="flex items-center gap-2 mb-3">
+                       <span className="text-xl">💭</span>
+                       <span className="text-base font-semibold text-blue-600 dark:text-blue-400">Curious</span>
+                     </div>
+                     <p className="text-base">{data.curious}</p>
+                   </div>
+                 )}
+                 {data.funny && (
+                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-5">
+                     <div className="flex items-center gap-2 mb-3">
+                       <span className="text-xl">😂</span>
+                       <span className="text-base font-semibold text-purple-600 dark:text-purple-400">Funny</span>
+                     </div>
+                     <p className="text-base">{data.funny}</p>
+                   </div>
+                 )}
+                 {data.bold && (
+                   <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-5">
+                     <div className="flex items-center gap-2 mb-3">
+                       <span className="text-xl">🔥</span>
+                       <span className="text-base font-semibold text-red-600 dark:text-red-400">Bold</span>
+                     </div>
+                     <p className="text-base">{data.bold}</p>
+                   </div>
+                 )}
+               </div>
+             )}
 
             {type === "wavelength" && data?.dimensions && (
                <WavelengthChart 
@@ -161,17 +179,17 @@ export default function AIInsightModal({ isOpen, onClose, type, data, loading }:
                />
              )}
 
-            {type === "persona" && data && (
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-4">
-                <div className="text-center mb-4">
-                  <Sparkles className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                  <h3 className="text-2xl font-bold">{data.title}</h3>
-                </div>
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <p className="text-sm whitespace-pre-wrap">{data.full_analysis}</p>
-                </div>
-              </div>
-            )}
+             {type === "persona" && data && (
+               <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6">
+                 <div className="text-center mb-6">
+                   <Sparkles className="w-10 h-10 mx-auto mb-3 text-blue-500" />
+                   <h3 className="text-3xl font-bold">{data.title}</h3>
+                 </div>
+                 <div className="prose prose-base dark:prose-invert max-w-none">
+                   <p className="text-base leading-relaxed whitespace-pre-wrap">{data.full_analysis}</p>
+                 </div>
+               </div>
+             )}
 
             {type === "bio" && data && (
               <div className="space-y-3">
@@ -229,26 +247,26 @@ export default function AIInsightModal({ isOpen, onClose, type, data, loading }:
               </div>
             )}
 
-            {type === "prediction" && data && (
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-pink-50 to-red-50 dark:from-pink-900/20 dark:to-red-900/20 rounded-2xl p-4">
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {data.prediction}
-                  </div>
-                </div>
-                {data.verdict && (
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4">
-                    <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Verdict</p>
-                    <p className="text-sm">{data.verdict}</p>
-                  </div>
-                )}
-                {data.fun_fact && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4">
-                    <p className="text-sm">✨ {data.fun_fact}</p>
-                  </div>
-                )}
-              </div>
-            )}
+             {type === "prediction" && data && (
+               <div className="space-y-4">
+                 <div className="bg-gradient-to-br from-pink-50 to-red-50 dark:from-pink-900/20 dark:to-red-900/20 rounded-2xl p-6">
+                   <div className="prose prose-base dark:prose-invert max-w-none whitespace-pre-wrap">
+                     {data.prediction}
+                   </div>
+                 </div>
+                 {data.verdict && (
+                   <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-5">
+                     <p className="text-base font-semibold text-green-600 dark:text-green-400 mb-2">Verdict</p>
+                     <p className="text-base">{data.verdict}</p>
+                   </div>
+                 )}
+                 {data.fun_fact && (
+                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5">
+                     <p className="text-base">✨ {data.fun_fact}</p>
+                   </div>
+                 )}
+               </div>
+             )}
 
             {type === "dealbreakers" && data && (
               <div className="space-y-4">
@@ -286,12 +304,12 @@ export default function AIInsightModal({ isOpen, onClose, type, data, loading }:
           </div>
         )}
 
-        <button
-          onClick={onClose}
-          className="w-full mt-6 bg-black dark:bg-white text-white dark:text-black py-3 rounded-full font-medium"
-        >
-          Got it!
-        </button>
+         <button
+           onClick={onClose}
+           className="w-full mt-6 bg-black dark:bg-white text-white dark:text-black py-3 sm:py-4 rounded-full font-semibold text-base hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+         >
+           Got it!
+         </button>
       </motion.div>
     </div>
   );

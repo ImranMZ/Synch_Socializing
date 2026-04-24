@@ -97,16 +97,16 @@ export default function VibeQuizModal({ isOpen, onClose, onComplete }: QuizModal
       />
 
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="relative w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-[40px] p-8 shadow-2xl overflow-hidden"
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="relative w-full max-w-2xl bg-white dark:bg-[#1C1C1E] rounded-[40px] p-6 sm:p-8 shadow-2xl overflow-hidden"
       >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
         >
-          <X className="w-5 h-5 text-[#8E8E93]" />
+          <X className="w-6 h-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
         </button>
 
         <AnimatePresence mode="wait">
@@ -118,15 +118,15 @@ export default function VibeQuizModal({ isOpen, onClose, onComplete }: QuizModal
               exit={{ opacity: 0 }}
               className="text-center"
             >
-              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                <FlaskConical className="w-10 h-10 text-white" />
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-xl">
+                <FlaskConical className="w-12 h-12 text-white" />
               </div>
-              <h2 className="text-3xl font-bold mb-3">Vibe Check Quiz</h2>
-              <p className="text-[#8E8E93] mb-8 text-lg">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3">Vibe Check Quiz</h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 text-lg sm:text-xl">
                 Discover your inner archetype. Your answers will refine your matches using ML.
               </p>
 
-              <div className="bg-blue-500/10 rounded-2xl p-4 mb-8">
+              <div className="bg-blue-500/10 rounded-2xl p-5 mb-8">
                 <p className="text-sm text-blue-600 dark:text-blue-400">
                   <Sparkles className="w-4 h-4 inline mr-1" />
                   Takes ~30 seconds • Changes how we match you
@@ -135,7 +135,7 @@ export default function VibeQuizModal({ isOpen, onClose, onComplete }: QuizModal
 
               <button
                 onClick={() => setShowIntro(false)}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-full font-semibold text-lg flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 sm:py-5 rounded-full font-semibold text-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-blue-500/40"
               >
                 Start Quiz <ChevronRight className="w-5 h-5" />
               </button>
@@ -147,18 +147,18 @@ export default function VibeQuizModal({ isOpen, onClose, onComplete }: QuizModal
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <div className="mb-2 text-sm text-[#8E8E93]">
+              <div className="mb-3 text-sm text-gray-500 dark:text-gray-400 font-medium">
                 Question {currentQuestion + 1} of {defaultQuestions.length}
               </div>
 
-              <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mb-8">
+              <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-8">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
                   style={{ width: `${((currentQuestion + 1) / defaultQuestions.length) * 100}%` }}
                 />
               </div>
 
-              <h3 className="text-xl font-semibold mb-8">
+              <h3 className="text-xl sm:text-2xl font-semibold mb-8">
                 {defaultQuestions[currentQuestion].question}
               </h3>
 
@@ -167,9 +167,9 @@ export default function VibeQuizModal({ isOpen, onClose, onComplete }: QuizModal
                   <button
                     key={option.id}
                     onClick={() => handleAnswer(option.id)}
-                    className="w-full text-left p-4 rounded-2xl bg-white dark:bg-[#2C2C2E] border border-black/5 dark:border-white/10 hover:border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                    className="w-full text-left p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#2C2C2E] border border-black/10 dark:border-white/20 hover:border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 hover:scale-[1.01]"
                   >
-                    {option.text}
+                    <span className="text-base">{option.text}</span>
                   </button>
                 ))}
               </div>

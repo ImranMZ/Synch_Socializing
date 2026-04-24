@@ -37,6 +37,7 @@ export default function Home() {
   
   const [formData, setFormData] = useState({
     Goal: "",
+    Gender: "",
     Vibe: "",
     Hobbies: [] as string[],
     Religiosity: "",
@@ -71,7 +72,7 @@ export default function Home() {
 
   const handleSelectGoal = (goal: string) => {
     setFormData({ ...formData, Goal: goal });
-    setStep(1);
+    setStep(0.5);
   };
 
   const fetchHiddenTruth = async () => {
@@ -82,6 +83,7 @@ export default function Home() {
     const profile: UserProfile = {
       Vibe: formData.Vibe,
       Goal: formData.Goal,
+      Gender: formData.Gender,
       Hobbies: formData.Hobbies.join(", "),
       Smoking: formData.Smoking,
       Diet: formData.Diet,
@@ -116,6 +118,7 @@ export default function Home() {
     const profile: UserProfile = {
       Vibe: formData.Vibe,
       Goal: formData.Goal,
+      Gender: formData.Gender,
       Hobbies: formData.Hobbies.join(", "),
       Smoking: formData.Smoking,
       Diet: formData.Diet,
@@ -168,6 +171,7 @@ export default function Home() {
     const profile: UserProfile = {
       Vibe: formData.Vibe,
       Goal: formData.Goal,
+      Gender: formData.Gender,
       Hobbies: formData.Hobbies.join(", "),
       Smoking: formData.Smoking,
       Diet: formData.Diet,
@@ -311,6 +315,32 @@ export default function Home() {
                 </div>
               </motion.div>
             )}
+          </motion.div>
+        )}
+
+        {/* STEP 0.5: GENDER SELECTION */}
+        {step === 0.5 && (
+          <motion.div key="step0.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
+            <button onClick={() => setStep(0)} className="mb-6 text-blue-500 font-medium">← Back</button>
+            <h2 className="text-3xl font-bold mb-8">I identify as</h2>
+            
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Select your gender</h3>
+              <div className="flex flex-wrap gap-3">
+                <button 
+                  onClick={() => { setFormData({ ...formData, Gender: "Male" }); setStep(1); }}
+                  className="px-6 py-4 rounded-full font-medium bg-blue-500 text-white shadow-lg"
+                >
+                  Male
+                </button>
+                <button 
+                  onClick={() => { setFormData({ ...formData, Gender: "Female" }); setStep(1); }}
+                  className="px-6 py-4 rounded-full font-medium bg-pink-500 text-white shadow-lg"
+                >
+                  Female
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
 

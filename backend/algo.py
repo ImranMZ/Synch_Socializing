@@ -60,7 +60,14 @@ class MatchEngine:
         user_goal = user_profile.get('Goal', 'Both')
         if user_goal != 'Both':
             matches = matches[(matches['Goal'] == user_goal) | (matches['Goal'] == 'Both')]
-            
+        
+        user_gender = user_profile.get('Gender', '')
+        if user_gender and user_goal == 'Partner':
+            if user_gender == 'Male':
+                matches = matches[matches['Gender'] == 'F']
+            elif user_gender == 'Female':
+                matches = matches[matches['Gender'] == 'M']
+        
         if user_profile.get('strict_city') and user_profile.get('City'):
             matches = matches[matches['City'] == user_profile['City']]
             

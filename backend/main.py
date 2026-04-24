@@ -30,6 +30,7 @@ except Exception as e:
 class UserProfile(BaseModel):
     Vibe: str = ""
     Goal: str = ""
+    Gender: str = ""
     Hobbies: str = ""
     Smoking: str = ""
     Diet: str = ""
