@@ -2,34 +2,34 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Sparkles, Heart, ArrowRight, Check } from "lucide-react";
-import { useAuth, getAvatarUrl, createUser } from "@/lib/auth";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, ArrowRight, ChevronLeft, Check } from "lucide-react";
+import { useAuth, getAvatarUrl } from "@/lib/auth";
+
+const avatarStyles = [
+  { id: "avataaars", name: "Avataaars" },
+  { id: "big-ears", name: "Big Ears" },
+  { id: "bottts", name: "Bottts" },
+  { id: "fun-emoji", name: "Fun" },
+  { id: "lorelei", name: "Lorelei" },
+  { id: "micah", name: "Micah" },
+  { id: "notionists", name: "Notion" },
+  { id: "openPeeps", name: "Open" },
+  { id: "personas", name: "Personas" },
+  { id: "puzzler", name: "Puzzler" },
+];
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [step, setStep] = useState<"name" | "avatar">("name");
-  const [selectedAvatar, setSelectedAvatar] = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState(0);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
-  const avatarStyle = [
-    "avataaars",
-    "big-ears", 
-    "bottts",
-    "fun-emoji",
-    "lorelei",
-    "micah",
-    "notionists",
-    "openPeeps",
-    "personas",
-    "puzzler",
-  ];
-
   useEffect(() => {
     if (name.trim()) {
-      setSelectedAvatar(getAvatarUrl(name));
+      setSelectedAvatar(0);
     }
   }, [name]);
 
@@ -48,126 +48,219 @@ export default function RegisterPage() {
     setStep("name");
   };
 
-  if (step === "avatar") {
+  const getAvatarUrlWithStyle = (style: string) => {
+    const seed = name.replace(/\s+/g, "") || "default";
+    return `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+  };
+
+  // Step 1: Name input
+  if (step === "name") {
     return (
-      <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] flex flex-col items-center justify-center p-4">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-dots opacity-50" />
+        <div className="absolute inset-0 bg-gradient-mesh opacity-80" />
+        
+        {/* Floating orbs */}
+        <motion.div
+          animate={{ x: [0, 80, 0], y: [0, -40, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/3 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-[100px]"
+        />
+        <motion.div
+          animate={{ x: [0, -60, 0], y: [0, 60, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-[100px]"
+        />
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 w-full max-w-md mx-4"
         >
-          <button onClick={handleBack} className="mb-6 text-blue-500 font-medium hover:underline">
-            ← Back
-          </button>
-
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold">Choose Your Avatar</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Pick a style that represents you</p>
-          </div>
-
-          <div className="grid grid-cols-5 gap-3 mb-8">
-            {avatarStyle.map((style) => (
-              <button
-                key={style}
-                onClick={() => setSelectedAvatar(`https://api.dicebear.com/9.x/${style}/svg?seed=${name}&backgroundColor=b6e3f4,c0aede,d1d4f9`)}
-                className={`aspect-square rounded-xl overflow-hidden bg-white dark:bg-[#1C1C1E] p-2 border-2 transition-all ${
-                  selectedAvatar.includes(style)
-                    ? "border-blue-500 scale-110"
-                    : "border-transparent hover:border-black/10 dark:hover:border-white/10"
-                }`}
-              >
-                <img
-                  src={`https://api.dicebear.com/9.x/${style}/svg?seed=${name}&backgroundColor=b6e3f4`}
-                  alt={style}
-                  className="w-full h-full"
-                />
-              </button>
-            ))}
-          </div>
-
-          <div className="bg-white dark:bg-[#1C1C1E] rounded-3xl p-6 mb-6 border border-black/10 dark:border-white/20">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Preview</p>
-            <div className="flex items-center gap-4">
-              <img
-                src={selectedAvatar}
-                alt="Your avatar"
-                className="w-20 h-20 rounded-2xl"
-              />
-              <div>
-                <h2 className="text-xl font-bold">{name}</h2>
-                <p className="text-gray-500 text-sm">@{name.toLowerCase().replace(/\s+/g, "")}</p>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass dark:glass-dark rounded-3xl p-8 shadow-2xl border border-white/20"
           >
-            {loading ? (
-              <Sparkles className="w-5 h-5 animate-pulse" />
-            ) : (
-              <>
-                Get Started <ArrowRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
+            {/* Logo */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="w-20 h-20 mx-auto mb-6 relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl blur-lg opacity-50" />
+              <div className="relative w-full h-full bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-white" />
+              </div>
+            </motion.div>
+
+            <h2 className="text-3xl font-bold text-center mb-2">Join Synch</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-center mb-6">Create your vibe profile</p>
+
+            {/* Name input with live preview */}
+            <div className="space-y-4">
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="What's your name?"
+                  className="w-full px-6 py-4 bg-white dark:bg-[#1C1C1E] border border-black/10 dark:border-white/20 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  autoFocus
+                />
+              </motion.div>
+
+              {/* Live avatar preview */}
+              <AnimatePresence>
+                {name.trim() && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-[#2C2C2E] rounded-2xl"
+                  >
+                    <motion.img
+                      src={getAvatarUrl(name)}
+                      alt="Preview"
+                      className="w-16 h-16 rounded-xl"
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <div>
+                      <p className="font-semibold text-lg">{name}</p>
+                      <p className="text-sm text-gray-500">@{name.toLowerCase().replace(/\s+/g, "")}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.button
+                onClick={handleContinue}
+                disabled={!name.trim()}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg hover:shadow-xl transition-all"
+              >
+                Continue <ArrowRight className="w-5 h-5" />
+              </motion.button>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6 text-center"
+            >
+              <p className="text-gray-500 dark:text-gray-400">
+                Already have an account?{" "}
+                <button onClick={() => router.push("/login")} className="text-blue-500 font-medium hover:underline">
+                  Log In
+                </button>
+              </p>
+            </motion.div>
+          </motion.div>
         </motion.div>
       </div>
     );
   }
 
+  // Step 2: Avatar selection
   return (
-    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] flex flex-col items-center justify-center p-4">
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
-
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-dots opacity-50" />
+      <div className="absolute inset-0 bg-gradient-mesh opacity-80" />
+      
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="relative z-10 w-full max-w-2xl"
       >
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-pink-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-xl">
-            <Sparkles className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold">Join Synch</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Create your vibe profile</p>
-        </div>
+        <button 
+          onClick={handleBack}
+          className="mb-6 text-blue-500 font-medium flex items-center gap-2 hover:underline"
+        >
+          <ChevronLeft className="w-5 h-5" /> Back
+        </button>
 
-        <div className="space-y-4">
-          <div>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="What's your name?"
-              className="w-full px-6 py-4 bg-white dark:bg-[#1C1C1E] border border-black/10 dark:border-white/20 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
+        <div className="glass dark:glass-dark rounded-3xl p-8 shadow-2xl border border-white/20">
+          <h2 className="text-3xl font-bold text-center mb-2">Pick Your Avatar</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-center mb-6">Choose a style that represents you</p>
+
+          {/* Avatar grid */}
+          <div className="grid grid-cols-5 gap-3 mb-6">
+            {avatarStyles.map((style, index) => (
+              <motion.button
+                key={style.id}
+                onClick={() => setSelectedAvatar(index)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`aspect-square rounded-2xl overflow-hidden bg-white dark:bg-[#2C2C2E] p-2 border-4 transition-all ${
+                  selectedAvatar === index
+                    ? "border-blue-500 scale-110 shadow-lg"
+                    : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                }`}
+              >
+                <img
+                  src={getAvatarUrlWithStyle(style.id)}
+                  alt={style.name}
+                  className="w-full h-full"
+                />
+              </motion.button>
+            ))}
           </div>
 
-          <button
-            onClick={handleContinue}
-            disabled={!name.trim()}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg"
+          {/* Preview card */}
+          <motion.div
+            key={selectedAvatar}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6 mb-6 flex items-center gap-4"
           >
-            Continue <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
+            <motion.img
+              src={getAvatarUrlWithStyle(avatarStyles[selectedAvatar].id)}
+              alt="Selected"
+              className="w-24 h-24 rounded-2xl"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <div>
+              <h3 className="text-2xl font-bold">{name}</h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                @{name.toLowerCase().replace(/\s+/g, "")}
+              </p>
+              <p className="text-sm text-blue-500 mt-1">
+                {avatarStyles[selectedAvatar].name} style
+              </p>
+            </div>
+          </motion.div>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 dark:text-gray-400">
-            Already have an account?{" "}
-            <button onClick={() => router.push("/login")} className="text-blue-500 font-medium hover:underline">
-              Log In
-            </button>
-          </p>
-        </div>
+          <motion.button
+            onClick={handleSubmit}
+            disabled={loading}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
+          >
+            {loading ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+              />
+            ) : (
+              <>
+                Get Started <Sparkles className="w-5 h-5" />
+              </>
+            )}
+          </motion.button>
+        </motion.div>
       </motion.div>
     </div>
   );
