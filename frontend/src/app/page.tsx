@@ -144,6 +144,7 @@ export default function Home() {
     const payload: UserProfile = {
       Vibe: formData.Vibe,
       Goal: formData.Goal,
+      Gender: formData.Gender,
       Hobbies: formData.Hobbies.join(", "),
       Smoking: formData.Smoking,
       Diet: formData.Diet,

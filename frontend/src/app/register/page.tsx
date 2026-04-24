@@ -260,7 +260,7 @@ export default function RegisterPage() {
               </>
             )}
           </motion.button>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );
