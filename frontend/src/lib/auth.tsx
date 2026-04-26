@@ -11,6 +11,8 @@ export interface User {
   vibe?: string;
   hobbies?: string[];
   gender?: string;
+  age?: number;
+  city?: string;
 }
 
 export interface AppSettings {
@@ -37,11 +39,14 @@ export function getAvatarUrl(name: string): string {
   return `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 }
 
-export function createUser(name: string): User {
+export function createUser(name: string, gender?: string, age?: number, city?: string): User {
   return {
     name,
     avatar: getAvatarUrl(name),
     createdAt: new Date().toISOString(),
+    gender,
+    age,
+    city,
   };
 }
 
@@ -137,7 +142,7 @@ interface AuthContextType {
   user: User | null;
   settings: AppSettings;
   loading: boolean;
-  login: (name: string) => void;
+  login: (name: string, gender?: string, age?: number, city?: string) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   updateSettings: (updates: Partial<AppSettings>) => void;
@@ -181,8 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = (name: string) => {
-    const newUser = createUser(name);
+  const login = (name: string, gender?: string, age?: number, city?: string) => {
+    const newUser = createUser(name, gender, age, city);
     saveUser(newUser);
     setUser(newUser);
   };

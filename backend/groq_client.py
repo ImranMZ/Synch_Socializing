@@ -84,4 +84,8 @@ async def generate_ai_response(
 ) -> str:
     if not groq_client.is_available():
         return "AI features are disabled. Please set GROQ_API_KEY in backend/.env file to enable AI features."
-    return await groq_client.chat(system_prompt, user_message, temperature, max_tokens)
+        
+    # Enforce concise AI responses globally
+    concise_prompt = system_prompt + "\n\nCRITICAL INSTRUCTION: Keep your response extremely concise, direct, and short. Limit your response to 2-3 sentences maximum."
+    
+    return await groq_client.chat(concise_prompt, user_message, temperature, max_tokens)
