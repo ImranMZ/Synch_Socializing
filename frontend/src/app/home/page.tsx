@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles, Heart, Users, Target, ArrowRight, ChevronRight, Star, Zap, MapPin, Activity } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8001/api/stats")
-      .then(res => res.json())
+    api.getStats()
       .then(data => setStats(data))
       .catch(console.error);
   }, []);
@@ -71,37 +71,16 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
+          className="text-center mb-16 flex flex-col items-center"
         >
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-            className="w-24 h-24 mx-auto mb-6 relative"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+            className="w-full max-w-[500px] mb-8"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 rounded-3xl blur-lg opacity-50 animate-pulse" />
-            <div className="relative w-full h-full bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 rounded-3xl flex items-center justify-center shadow-2xl">
-              <Sparkles className="w-12 h-12 text-white" />
-            </div>
+            <img src="/logo-full.svg" alt="Synch Branding" className="w-full h-auto drop-shadow-[0_0_20px_rgba(123,47,247,0.2)]" />
           </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold gradient-text mb-4"
-          >
-            Find Your Vibe
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl sm:text-2xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-8"
-          >
-            AI-powered matching that understands your personality, not just your profile
-          </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

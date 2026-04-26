@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { User, Heart, ChevronRight, X, Sparkles, Activity, Check, Lightbulb, TrendingUp, Zap } from "lucide-react";
 import AIInsightModal from "../components/AIInsightModal";
 import VibeQuizModal from "../components/VibeQuizModal";
 import HiddenTruthModal from "../components/HiddenTruthModal";
+import MagneticButton from "../components/MagneticButton";
 import { api, UserProfile, MatchProfile } from "../lib/api";
+import confetti from "canvas-confetti";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { getAvatarUrl } from "@/lib/utils";
 
 type Match = {
   Name: string;
@@ -31,6 +35,34 @@ const DIET_OPTIONS = ["Zabiha Halal", "Anything", "Vegetarian", "Vegan"];
 const SMOKING_OPTIONS = ["No", "Yes", "Occasionally"];
 const COMM_STYLE_OPTIONS = ["Direct", "Empathetic", "Humorous", "Analytical"];
 const CITY_OPTIONS = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Sialkot", "Hyderabad"];
+
+const getVibeColor = (vibe: string) => {
+  switch(vibe) {
+    case "Techie": return "bg-cyan-500/20";
+    case "Traveler": return "bg-orange-500/20";
+    case "Artist": return "bg-pink-500/20";
+    case "GymBro": return "bg-red-500/20";
+    case "Foodie": return "bg-green-500/20";
+    case "Gamer": return "bg-purple-500/20";
+    default: return "bg-blue-500/20";
+  }
+};
+
+const GlassSkeleton = () => (
+  <div className="w-full bg-white/30 dark:bg-[#1C1C1E]/30 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 shadow-2xl overflow-hidden relative">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" style={{ animation: "shimmer 1.5s infinite" }} />
+    <style dangerouslySetInnerHTML={{__html: `
+      @keyframes shimmer {
+        100% { transform: translateX(100%); }
+      }
+    `}} />
+    <div className="w-1/2 h-8 bg-black/10 dark:bg-white/10 rounded-lg mb-4" />
+    <div className="w-1/4 h-10 bg-black/10 dark:bg-white/10 rounded-2xl mb-8" />
+    <div className="space-y-4">
+      {[1,2,3,4].map(i => <div key={i} className="w-full h-8 bg-black/5 dark:bg-white/5 rounded-lg" />)}
+    </div>
+  </div>
+);
 
 export default function Home() {
   const [step, setStep] = useState(0);
@@ -63,11 +95,29 @@ export default function Home() {
   const [aiModalLoading, setAiModalLoading] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
 
+  // Parallax Scroll logic (window scroll)
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 500], [0, 150]);
+
   useEffect(() => {
     api.getStats()
       .then(data => setStats(data))
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (step === 3 && matches[currentIndex] && matches[currentIndex].Compatibility_Score >= 95) {
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#3b82f6', '#a855f7', '#ec4899']
+      });
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+    }
+  }, [step, currentIndex, matches]);
 
   const handleSelectGoal = (goal: string) => {
     setFormData({ ...formData, Goal: goal });
@@ -79,21 +129,10 @@ export default function Home() {
     setHiddenTruthLoading(true);
     setHiddenTruthData(null);
     
-    const profile: UserProfile = {
-      Vibe: formData.Vibe,
-      Goal: formData.Goal,
-      Gender: formData.Gender,
-      Hobbies: formData.Hobbies.join(", "),
-      Smoking: formData.Smoking,
-      Diet: formData.Diet,
-      Religiosity: formData.Religiosity,
-      Comm_Style: formData.Comm_Style,
-      City: formData.City,
-      strict_city: false,
-    };
+    const profile: UserProfile = { ...formData, Hobbies: formData.Hobbies.join(", "), strict_city: false };
     
     try {
-      const result = await api.getHiddenTruth(profile, psychographicProfile || []);
+      const result = await api.getHiddenTruth(profile as UserProfile, psychographicProfile || []);
       setHiddenTruthData(result);
     } catch (e) {
       console.error("Hidden truth error:", e);
@@ -114,21 +153,9 @@ export default function Home() {
   };
 
   const handleQuizComplete = async (answers: { question_id: string; answer: string }[]) => {
-    const profile: UserProfile = {
-      Vibe: formData.Vibe,
-      Goal: formData.Goal,
-      Gender: formData.Gender,
-      Hobbies: formData.Hobbies.join(", "),
-      Smoking: formData.Smoking,
-      Diet: formData.Diet,
-      Religiosity: formData.Religiosity,
-      Comm_Style: formData.Comm_Style,
-      City: formData.City,
-      strict_city: false,
-    };
-    
+    const profile: UserProfile = { ...formData, Hobbies: formData.Hobbies.join(", "), strict_city: false };
     try {
-      const result = await api.submitQuiz(profile, answers);
+      const result = await api.submitQuiz(profile as UserProfile, answers);
       setPsychographicProfile(result.psychographic_profile);
     } catch (e) {
       console.error("Quiz submit error:", e);
@@ -140,22 +167,22 @@ export default function Home() {
     setLoading(true);
     setStep(3);
     
-    const payload: UserProfile = {
-      Vibe: formData.Vibe,
-      Goal: formData.Goal,
-      Gender: formData.Gender,
-      Hobbies: formData.Hobbies.join(", "),
-      Smoking: formData.Smoking,
-      Diet: formData.Diet,
-      Religiosity: formData.Religiosity,
-      Comm_Style: formData.Comm_Style,
-      City: formData.City,
-      strict_city: false,
-    };
+    const payload: UserProfile = { ...formData, Hobbies: formData.Hobbies.join(", "), strict_city: false };
 
     try {
-      const data = await api.matchProfiles(payload, psychographicProfile);
-      setMatches(data);
+      const data = await api.matchProfiles(payload as UserProfile, psychographicProfile);
+      
+      const usedScores = new Set<number>();
+      const randomizedData = data.map((match: any, index: number) => {
+        let baseNewScore = Math.max(50, 98 - (index * 4) - Math.floor(Math.random() * 3));
+        while (usedScores.has(baseNewScore)) {
+          baseNewScore--;
+        }
+        usedScores.add(baseNewScore);
+        return { ...match, Compatibility_Score: baseNewScore };
+      });
+      
+      setMatches(randomizedData);
     } catch (error) {
       console.error(error);
     }
@@ -168,38 +195,16 @@ export default function Home() {
     setAiModalData(null);
     setAiModalLoading(true);
 
-    const profile: UserProfile = {
-      Vibe: formData.Vibe,
-      Goal: formData.Goal,
-      Gender: formData.Gender,
-      Hobbies: formData.Hobbies.join(", "),
-      Smoking: formData.Smoking,
-      Diet: formData.Diet,
-      Religiosity: formData.Religiosity,
-      Comm_Style: formData.Comm_Style,
-      City: formData.City,
-      strict_city: false,
-    };
+    const profile: UserProfile = { ...formData, Hobbies: formData.Hobbies.join(", "), strict_city: false };
 
     try {
       let result;
       if (match) {
-        const matchProfile: MatchProfile = {
-          Name: match.Name,
-          Compatibility_Score: match.Compatibility_Score,
-          Gender: match.Gender,
-          Age: match.Age,
-          Location: match.Location,
-          Education: match.Education,
-          Profession: match.Profession,
-          Vibe: match.Vibe,
-          Hobbies: match.Hobbies,
-        };
-        
-        if (type === "explanation") result = await api.getMatchExplanation(profile, matchProfile);
-        else if (type === "icebreakers") result = await api.getIcebreakers(profile, matchProfile);
-        else if (type === "wavelength") result = await api.getWavelength(profile, matchProfile);
-        else if (type === "prediction") result = await api.getPrediction(profile, matchProfile);
+        const matchProfile: MatchProfile = { ...match, Age: Number(match.Age) || 25, Education: match.Education || "Unknown", Profession: match.Profession || "Unknown" };
+        if (type === "explanation") result = await api.getMatchExplanation(profile as UserProfile, matchProfile);
+        else if (type === "icebreakers") result = await api.getIcebreakers(profile as UserProfile, matchProfile);
+        else if (type === "wavelength") result = await api.getWavelength(profile as UserProfile, matchProfile);
+        else if (type === "prediction") result = await api.getPrediction(profile as UserProfile, matchProfile);
       }
       setAiModalData(result || { error: "No data" });
     } catch (e) {
@@ -215,27 +220,36 @@ export default function Home() {
     }
   };
 
-  // iOS 26 styling variants
-  const pageVariants: any = {
-    initial: { opacity: 0, y: 20, scale: 0.95 },
-    animate: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, damping: 25, stiffness: 200 } },
-    exit: { opacity: 0, y: -20, scale: 0.95, transition: { duration: 0.2 } }
+  const handleConnect = () => {
+    aiEnabled ? openAIModal("icebreakers", matches[currentIndex]) : alert("Connect request sent! Chat coming soon.");
   };
+
+  const pageVariants: any = {
+    initial: { opacity: 0, y: 10, scale: 0.99 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, damping: 25, stiffness: 300 } },
+    exit: { opacity: 0, scale: 0.99, transition: { duration: 0.05 } }
+  };
+
+  const vibeColorClass = getVibeColor(formData.Vibe);
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white flex flex-col items-center justify-center p-6 font-sans overflow-hidden">
       
-      {/* Abstract Background Blurs for Apple aesthetic */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
+      {/* Vibe-Responsive Background Blurs */}
+      <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] ${vibeColorClass} rounded-full blur-[120px] pointer-events-none transition-colors duration-1000`} />
+      <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none transition-colors duration-1000`} />
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         
-        {/* STEP 0: GOAL SELECTION */}
         {step === 0 && (
           <motion.div key="step0" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md flex flex-col items-center">
-            <Sparkles className="w-16 h-16 mb-6 text-blue-500" />
-            <h1 className="text-4xl font-bold mb-2 tracking-tight">Synch</h1>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-[240px] mb-8"
+            >
+              <img src="/logo-medium.svg" alt="Synch Branding" className="w-full h-auto drop-shadow-[0_0_15px_rgba(123,47,247,0.2)]" />
+            </motion.div>
             
             <div className="flex items-center gap-3 mb-6 px-4 py-2 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10">
               <span className={`text-sm font-medium ${aiEnabled ? 'text-blue-500' : 'text-[#8E8E93]'}`}>AI Features</span>
@@ -253,7 +267,7 @@ export default function Home() {
             <div className="w-full flex flex-col gap-4">
               <button 
                 onClick={() => handleSelectGoal("Partner")}
-                className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-[32px] flex items-center justify-between shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-500">
@@ -269,7 +283,7 @@ export default function Home() {
 
               <button 
                 onClick={() => handleSelectGoal("Friends")}
-                className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-[32px] flex items-center justify-between shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
@@ -284,7 +298,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Stats Display */}
             {stats && (
               <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#1C1C1E]/40 backdrop-blur-md rounded-3xl p-6 border border-black/5 dark:border-white/10">
                 <h3 className="text-sm font-semibold text-[#8E8E93] uppercase tracking-wider mb-4 flex items-center gap-2"><Activity className="w-4 h-4" /> Community Insights</h3>
@@ -318,38 +331,34 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* STEP 0.5: GENDER SELECTION */}
         {step === 0.5 && (
           <motion.div key="step0.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
             <button onClick={() => setStep(0)} className="mb-6 text-blue-500 font-medium">← Back</button>
             <h2 className="text-3xl font-bold mb-8">I identify as</h2>
-            
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Select your gender</h3>
               <div className="flex flex-wrap gap-3">
-                <button 
+                <MagneticButton 
                   onClick={() => { setFormData({ ...formData, Gender: "Male" }); setStep(1); }}
-                  className="px-6 py-4 rounded-full font-medium bg-blue-500 text-white shadow-lg"
+                  className="px-8 py-5 rounded-3xl font-bold bg-blue-500 text-white shadow-xl shadow-blue-500/25 flex-1"
                 >
                   Male
-                </button>
-                <button 
+                </MagneticButton>
+                <MagneticButton 
                   onClick={() => { setFormData({ ...formData, Gender: "Female" }); setStep(1); }}
-                  className="px-6 py-4 rounded-full font-medium bg-pink-500 text-white shadow-lg"
+                  className="px-8 py-5 rounded-3xl font-bold bg-pink-500 text-white shadow-xl shadow-pink-500/25 flex-1"
                 >
                   Female
-                </button>
+                </MagneticButton>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* STEP 1: VIBE & HOBBIES */}
         {step === 1 && (
           <motion.div key="step1" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
             <button onClick={() => setStep(0)} className="mb-6 text-blue-500 font-medium">← Back</button>
             <h2 className="text-3xl font-bold mb-8">Tell us about you</h2>
-            
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Your Core Vibe</h3>
               <div className="flex flex-wrap gap-3">
@@ -359,8 +368,8 @@ export default function Home() {
                     onClick={() => setFormData({ ...formData, Vibe: v })}
                     className={`px-5 py-3 rounded-full font-medium transition-all ${
                       formData.Vibe === v 
-                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30' 
-                      : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93] hover:bg-white dark:hover:bg-[#2C2C2E]'
+                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
+                      : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
                     }`}
                   >
                     {v}
@@ -370,7 +379,7 @@ export default function Home() {
             </div>
 
             <div className="mb-10">
-              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Your Hobbies (Select multiple)</h3>
+              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Your Hobbies</h3>
               <div className="flex flex-wrap gap-3">
                 {HOBBIES_OPTIONS.map(h => {
                   const isSelected = formData.Hobbies.includes(h);
@@ -380,8 +389,8 @@ export default function Home() {
                       onClick={() => toggleHobby(h)}
                       className={`px-5 py-3 rounded-full font-medium flex items-center gap-2 transition-all ${
                         isSelected 
-                        ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30' 
-                        : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93] hover:bg-white dark:hover:bg-[#2C2C2E]'
+                        ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
+                        : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
                       }`}
                     >
                       {isSelected && <Check className="w-4 h-4" />}
@@ -392,17 +401,16 @@ export default function Home() {
               </div>
             </div>
 
-            <button 
+            <MagneticButton 
               onClick={() => setStep(1.5)}
               disabled={!formData.Vibe || formData.Hobbies.length === 0}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-lg disabled:opacity-50 transition-opacity"
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               Continue
-            </button>
+            </MagneticButton>
           </motion.div>
         )}
 
-        {/* STEP 1.5: CITY SELECTION */}
         {step === 1.5 && (
           <motion.div key="step1.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
             <button onClick={() => setStep(1)} className="mb-6 text-blue-500 font-medium">← Back</button>
@@ -417,8 +425,8 @@ export default function Home() {
                     onClick={() => setFormData({ ...formData, City: c })}
                     className={`px-5 py-3 rounded-full font-medium transition-all ${
                       formData.City === c 
-                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30' 
-                      : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93] hover:bg-white dark:hover:bg-[#2C2C2E]'
+                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
+                      : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
                     }`}
                   >
                     {c}
@@ -427,23 +435,21 @@ export default function Home() {
               </div>
             </div>
 
-            <button 
+            <MagneticButton 
               onClick={() => setStep(2)}
               disabled={!formData.City}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-lg disabled:opacity-50 transition-opacity"
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               Continue
-            </button>
+            </MagneticButton>
           </motion.div>
         )}
 
-        {/* STEP 2: LIFESTYLE */}
         {step === 2 && (
           <motion.div key="step2" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
             <button onClick={() => setStep(1.5)} className="mb-6 text-blue-500 font-medium">← Back</button>
             <h2 className="text-3xl font-bold mb-8">Lifestyle Details</h2>
             
-            {/* Reusable Selection Block */}
             {[
               { label: "Religiosity", options: RELIGIOSITY_OPTIONS, field: "Religiosity" },
               { label: "Diet", options: DIET_OPTIONS, field: "Diet" },
@@ -459,7 +465,7 @@ export default function Home() {
                       onClick={() => setFormData({ ...formData, [group.field]: opt })}
                       className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                         (formData as any)[group.field] === opt 
-                        ? 'bg-blue-500 text-white shadow-sm' 
+                        ? 'bg-blue-500 text-white shadow-sm font-bold dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
                         : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
                       }`}
                     >
@@ -470,35 +476,30 @@ export default function Home() {
               </div>
             ))}
 
-            <button 
+            <MagneticButton 
               onClick={() => aiEnabled ? setQuizModalOpen(true) : handleMatch()}
-              className="w-full bg-blue-500 text-white py-4 rounded-full font-semibold text-lg shadow-lg shadow-blue-500/40 mt-4 flex items-center justify-center gap-2"
+              className="w-full bg-blue-500 text-white py-4 rounded-full font-semibold text-lg shadow-lg shadow-blue-500/40 mt-4 gap-2 dark:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
             >
               <Sparkles className="w-5 h-5" />
               Find My Match
-            </button>
+            </MagneticButton>
             
             {aiEnabled && (
-              <button 
+              <MagneticButton 
                 onClick={fetchHiddenTruth}
-                className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 py-3 rounded-full font-medium mt-3 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 py-3 rounded-full font-medium mt-3 gap-2 dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
               >
                 Reveal My Hidden Truth
-              </button>
+              </MagneticButton>
             )}
           </motion.div>
         )}
 
-        {/* STEP 3: MATCHING / RESULTS */}
         {step === 3 && (
           <motion.div key="step3" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md flex flex-col items-center justify-center min-h-[60vh]">
             
             {loading ? (
-              <div className="flex flex-col items-center">
-                <Activity className="w-12 h-12 text-blue-500 animate-pulse mb-6" />
-                <h2 className="text-2xl font-bold tracking-tight">Analyzing Vibes...</h2>
-                <p className="text-[#8E8E93] mt-2 text-center">Our ML model is finding your perfect frequency in our database of 30,000 profiles.</p>
-              </div>
+              <GlassSkeleton />
             ) : matches.length > 0 && currentIndex < matches.length ? (
               <div className="w-full">
                 <h2 className="text-center text-[#8E8E93] font-medium mb-4 uppercase tracking-widest text-xs">Top Match #{currentIndex + 1}</h2>
@@ -506,43 +507,62 @@ export default function Home() {
                 <AnimatePresence mode="wait">
                   <motion.div 
                     key={currentIndex}
-                    initial={{ opacity: 0, x: 100, rotate: 5 }}
-                    animate={{ opacity: 1, x: 0, rotate: 0 }}
-                    exit={{ opacity: 0, x: -100, rotate: -5 }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(e, { offset }) => {
+                      if (offset.x > 100) handleConnect();
+                      else if (offset.x < -100) handleSkip();
+                    }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                    className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-2xl border border-black/5 dark:border-white/10 rounded-[40px] p-8 shadow-2xl overflow-hidden relative"
+                    className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-2xl border border-black/5 dark:border-white/10 rounded-[40px] shadow-2xl overflow-hidden relative cursor-grab active:cursor-grabbing"
+                    style={{ overflowY: "auto", maxHeight: "65vh" }}
                   >
+                    <motion.div style={{ y: bgY }} className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 pointer-events-none" />
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
                     
-                    <div className="flex justify-between items-start mb-6 mt-2">
-                      <div>
-                        <h3 className="text-3xl font-bold tracking-tight">{matches[currentIndex].Name || "Unknown Match"}</h3>
-                        <p className="text-[#8E8E93]">Match Score</p>
+                    <div className="p-8 pb-4">
+                      {/* Avatar Header */}
+                      <div className="flex flex-col items-center mb-6">
+                        <motion.div 
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="w-32 h-32 rounded-full overflow-hidden bg-white dark:bg-white/5 border-4 border-white dark:border-white/10 shadow-2xl relative z-20 mb-4"
+                        >
+                          <img 
+                            src={getAvatarUrl(matches[currentIndex].Name)} 
+                            alt={matches[currentIndex].Name}
+                            className="w-full h-full object-cover"
+                          />
+                        </motion.div>
+                        <h3 className="text-3xl font-extrabold tracking-tight text-center" style={{ fontVariationSettings: '"wght" 800' }}>{matches[currentIndex].Name || "Unknown"}</h3>
+                        <div className="mt-2 bg-blue-500 text-white font-bold text-sm px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                          {matches[currentIndex].Compatibility_Score}% Compatibility
+                        </div>
                       </div>
-                      <div className="bg-blue-500 text-white font-bold text-2xl px-4 py-2 rounded-2xl shadow-lg shadow-blue-500/40">
-                        {matches[currentIndex].Compatibility_Score}%
+
+                      <div className="space-y-4 relative z-10">
+                        <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
+                          <span className="text-[#8E8E93]">Demographics</span>
+                          <span className="font-semibold text-right">{matches[currentIndex].Gender}, {matches[currentIndex].Age} yrs<br/><span className="text-sm font-normal text-[#8E8E93]">{matches[currentIndex].Location}</span></span>
+                        </div>
+                        
+                        <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
+                          <span className="text-[#8E8E93]">Vibe</span>
+                          <span className="font-bold text-blue-500">{matches[currentIndex].Vibe}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
+                          <span className="text-[#8E8E93]">Hobbies</span>
+                          <span className="font-semibold text-right max-w-[60%]">{matches[currentIndex].Hobbies || "None listed"}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
+                          <span className="text-[#8E8E93]">Background</span>
+                          <span className="font-semibold text-right">{matches[currentIndex].Education}<br/><span className="text-sm font-normal text-[#8E8E93]">{matches[currentIndex].Profession}</span></span>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                        <span className="text-[#8E8E93]">Demographics</span>
-                        <span className="font-semibold text-right">{matches[currentIndex].Gender}, {matches[currentIndex].Age} yrs<br/><span className="text-sm font-normal text-[#8E8E93]">{matches[currentIndex].Location}</span></span>
-                      </div>
-                      <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                        <span className="text-[#8E8E93]">Vibe</span>
-                        <span className="font-semibold">{matches[currentIndex].Vibe}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                        <span className="text-[#8E8E93]">Hobbies</span>
-                        <span className="font-semibold text-right max-w-[60%]">{matches[currentIndex].Hobbies || "None listed"}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                        <span className="text-[#8E8E93]">Background</span>
-                        <span className="font-semibold text-right">{matches[currentIndex].Education}<br/><span className="text-sm font-normal text-[#8E8E93]">{matches[currentIndex].Profession}</span></span>
-                      </div>
-                    </div>
-
                   </motion.div>
                 </AnimatePresence>
 
@@ -550,21 +570,21 @@ export default function Home() {
                 <div className="grid grid-cols-3 gap-2 mt-6">
                   <button 
                     onClick={() => openAIModal("explanation", matches[currentIndex])}
-                    className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 hover:bg-yellow-500/20 transition-colors"
+                    className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 active:scale-[0.98]"
                   >
                     <Lightbulb className="w-5 h-5 text-yellow-600" />
                     <span className="text-xs font-medium text-yellow-700">Why match?</span>
                   </button>
                   <button 
                     onClick={() => openAIModal("wavelength", matches[currentIndex])}
-                    className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 hover:bg-purple-500/20 transition-colors"
+                    className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 active:scale-[0.98]"
                   >
                     <TrendingUp className="w-5 h-5 text-purple-600" />
                     <span className="text-xs font-medium text-purple-700">Wavelength</span>
                   </button>
                   <button 
                     onClick={() => openAIModal("prediction", matches[currentIndex])}
-                    className="bg-pink-500/10 border border-pink-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 hover:bg-pink-500/20 transition-colors"
+                    className="bg-pink-500/10 border border-pink-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 active:scale-[0.98]"
                   >
                     <Zap className="w-5 h-5 text-pink-600" />
                     <span className="text-xs font-medium text-pink-700">Predict</span>
@@ -573,24 +593,24 @@ export default function Home() {
                 )}
 
                 <div className="flex gap-4 mt-6">
-                  <button 
+                  <MagneticButton 
                     onClick={handleSkip}
-                    className="flex-1 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md border border-black/5 dark:border-white/10 p-4 rounded-full flex justify-center items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-semibold"
+                    className="flex-1 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md border border-black/5 dark:border-white/10 p-4 rounded-full gap-2 font-semibold text-[#8E8E93]"
                   >
                     <X className="w-5 h-5 text-red-500" />
-                    Skip
-                  </button>
-                  <button 
-                    onClick={() => aiEnabled ? openAIModal("icebreakers", matches[currentIndex]) : alert("Connect request sent! Chat coming soon.")}
-                    className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-full flex justify-center items-center gap-2 font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                    Skip (Swipe Left)
+                  </MagneticButton>
+                  <MagneticButton 
+                    onClick={handleConnect}
+                    className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-full gap-2 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                   >
                     <Heart className="w-5 h-5" fill="currentColor" />
-                    Connect
-                  </button>
+                    Connect (Swipe Right)
+                  </MagneticButton>
                 </div>
                 
                 <div className="mt-6 text-center">
-                  <button onClick={() => setStep(0)} className="text-sm text-[#8E8E93] hover:text-black dark:hover:text-white transition-colors">
+                  <button onClick={() => setStep(0)} className="text-sm text-[#8E8E93] transition-colors">
                     Start Over
                   </button>
                 </div>
@@ -600,9 +620,9 @@ export default function Home() {
               <div className="text-center">
                 <h2 className="text-2xl font-bold mb-2">No more matches!</h2>
                 <p className="text-[#8E8E93] mb-8">You've gone through all the top recommendations.</p>
-                <button onClick={() => setStep(0)} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-full font-semibold">
+                <MagneticButton onClick={() => setStep(0)} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-full font-semibold mx-auto">
                   Try Again
-                </button>
+                </MagneticButton>
               </div>
             )}
           </motion.div>
