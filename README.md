@@ -1,17 +1,21 @@
 # Synch
 Vibe-Matching App with AI-Powered Features
 
-## Quick Start
+## Quick Start (New PC / Fresh Setup)
 
 ```bash
-run_synch.bat
+setup_and_run.bat
 ```
 
-This will:
-1. Clean up existing processes on ports 3000 and 8000
-2. Start the backend server (FastAPI on port 8000)
-3. Start the frontend server (Next.js on port 3000)
-4. Open Chrome with the app
+This master script will:
+1. **Auto-detect** Python and Node.js
+2. **Setup Backend**: Create virtual environment and install requirements
+3. **Setup Frontend**: Install npm dependencies
+4. **Initialize Security**: Create `.env` placeholders
+5. **Launch**: Start both servers on ports 8001 (API) and 3000 (UI)
+
+> [!IMPORTANT]
+> After running the script for the first time, open `backend/.env` and paste your **Groq API Key** to enable AI features!
 
 ## Manual Setup
 
