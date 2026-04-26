@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import os
+import json
 from algo import MatchEngine
 
 app = FastAPI(title="Synch API", description="Vibe-Matching Backend with AI Features")
@@ -66,14 +67,18 @@ def get_stats():
     return engine.get_stats()
 
 @app.post("/api/match")
-def match_profiles(request: dict):
+def match_profiles(request: UserProfile, psychographic: str = None):
     if engine is None:
         return {"error": "Dataset or MatchEngine not loaded."}
     
-    profile = UserProfile(**request)
     psycho_profile = None
+    if psychographic:
+        try:
+            psycho_profile = json.loads(psychographic)
+        except Exception as e:
+            print(f"Error parsing psychographic: {e}")
     
-    top_matches = engine.find_matches(profile.dict(), psychographic_profile=psycho_profile)
+    top_matches = engine.find_matches(request.dict(), psychographic_profile=psycho_profile)
     return top_matches
 
 from ml.quiz_engine import get_quiz_questions, process_quiz_answers
@@ -142,5 +147,36 @@ async def get_prediction(request: MatchRequest):
 
 @app.post("/api/hidden-truth")
 async def get_hidden_truth(request: QuizWithProfileRequest):
-    result = await generate_hidden_truth(request.profile.dict(), request.quiz_answers)
+    # Convert list of quiz answers to a dict for the prompt
+    quiz_dict = {}
+    questions = get_quiz_questions()
+    
+    for ans in request.quiz_answers:
+        qid = None
+        aid = None
+        
+        if isinstance(ans, dict):
+            qid = ans.get("question_id")
+            aid = ans.get("answer")
+        elif hasattr(ans, "question_id"):
+            qid = ans.question_id
+            aid = ans.answer
+            
+        if qid and aid:
+            # Find the question and option text
+            q = next((q for q in questions if q["id"] == qid), None)
+            if q:
+                opt = next((o for o in q["options"] if o["id"] == aid), None)
+                if opt:
+                    quiz_dict[qid] = opt["text"]
+                else:
+                    quiz_dict[qid] = aid
+            else:
+                quiz_dict[qid] = aid
+            
+    result = await generate_hidden_truth(request.profile.dict(), quiz_dict)
     return result
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='127.0.0.1', port=8001)

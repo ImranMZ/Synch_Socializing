@@ -64,8 +64,7 @@ export default function Home() {
   const [aiEnabled, setAiEnabled] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8001/api/stats")
-      .then(res => res.json())
+    api.getStats()
       .then(data => setStats(data))
       .catch(console.error);
   }, []);

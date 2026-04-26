@@ -75,10 +75,15 @@ class MatchEngine:
         return matches.to_dict(orient="records")
     
     def _apply_psychographic_boost(self, user_vector, profile: dict):
-        base_scores = user_vector.toarray()[0].copy()
+        # Convert sparse to dense if needed
+        if hasattr(user_vector, "toarray"):
+            base_scores = user_vector.toarray()[0].copy()
+        else:
+            base_scores = user_vector[0].copy()
+            
+        weight_strength = 0.25
         
-        weight_strength = 0.15
-        
+        # Psychographic dimensions
         weights = np.array([
             profile.get('nocturnality', 0.5),
             profile.get('social_energy', 0.5),
@@ -89,11 +94,17 @@ class MatchEngine:
         
         normalized_weights = (weights - 0.5) * weight_strength + 1.0
         
-        boost_factor = np.mean(normalized_weights)
+        # Apply weights to the first few dimensions and pad the rest
+        # This will change the direction of the vector and thus the cosine similarity
+        if len(base_scores) > len(normalized_weights):
+            full_weights = np.ones_like(base_scores)
+            full_weights[:len(normalized_weights)] = normalized_weights
+            adjusted = base_scores * full_weights
+        else:
+            adjusted = base_scores * normalized_weights[:len(base_scores)]
         
-        adjusted = base_scores * boost_factor
-        
-        return adjusted
+        # Return as 2D array for kneighbors
+        return adjusted.reshape(1, -1)
         
     def get_stats(self) -> dict:
         if self.df.empty:

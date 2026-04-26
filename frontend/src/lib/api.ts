@@ -27,6 +27,11 @@ export interface MatchProfile {
 }
 
 export const api = {
+  async getStats() {
+    const res = await fetch(`${API_BASE}/api/stats`);
+    return res.json();
+  },
+
   async getQuizQuestions() {
     const res = await fetch(`${API_BASE}/api/quiz/questions`);
     return res.json();
