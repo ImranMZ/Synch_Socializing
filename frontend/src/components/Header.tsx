@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { Home, User, Settings, LogOut, Sparkles, Sun, Moon, Compass, History, Bell, Menu, X, Grid } from "lucide-react";
 import { useState, useEffect } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { getAvatarUrl } from "@/lib/utils";
 
 export default function Header() {
@@ -14,10 +14,6 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [orbOpen, setOrbOpen] = useState(false);
-  
-  const { scrollY } = useScroll();
-  const headerBgOpacity = useTransform(scrollY, [0, 100], [0.5, 0.9]);
-  const headerBlur = useTransform(scrollY, [0, 100], [10, 24]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -150,47 +146,41 @@ export default function Header() {
     );
   }
 
-  // Desktop Sidebar
+  // Desktop Sidebar - Floating Water Bubble Style
   return (
-    <motion.header 
-      style={{
-        backgroundColor: settings.darkMode ? `rgba(28, 28, 30, ${headerBgOpacity.get()})` : `rgba(255, 255, 255, ${headerBgOpacity.get()})`,
-        backdropFilter: `blur(${headerBlur.get()}px)`
-      }}
-      className="fixed top-0 left-0 bottom-0 w-20 z-50 border-r border-black/5 dark:border-white/10 flex flex-col items-center py-6 shadow-[1px_0_10px_rgba(0,0,0,0.02)]"
+    <header 
+      className="fixed top-4 left-4 bottom-4 w-20 z-50 
+        bg-[#161618] border border-white/8 
+        rounded-xl
+        flex flex-col items-center py-6"
     >
       <button 
         onClick={() => router.push("/")}
         className="flex flex-col items-center gap-1 mb-8 w-full px-2"
       >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-full h-12 flex items-center justify-center overflow-hidden"
-        >
-          <img src="/logo-medium.svg" alt="Synch Logo" className="w-auto h-full max-w-full drop-shadow-[0_0_8px_rgba(123,47,247,0.3)] object-contain" />
-        </motion.div>
+        <div className="w-full h-12 flex items-center justify-center overflow-hidden">
+          <img src="/logo-medium.svg" alt="Synch Logo" className="w-auto h-full object-contain" />
+        </div>
       </button>
 
       {/* Navigation */}
-      <nav className="flex flex-col items-center gap-6 flex-1 w-full">
+      <nav className="flex flex-col items-center gap-3 flex-1 w-full px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
-            <motion.button
+            <button
               key={item.path}
               onClick={() => router.push(item.path)}
-              whileTap={{ scale: 0.95 }}
-              className={`relative p-3 rounded-2xl transition-all duration-300 w-12 h-12 flex items-center justify-center ${
+              className={`relative p-3 rounded-lg transition-colors duration-150 w-12 h-12 flex items-center justify-center ${
                 isActive(item.path)
-                  ? "bg-blue-500/10 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)] dark:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                  : "text-[#8E8E93] hover:bg-black/5 dark:hover:bg-white/5"
+                  ? "bg-blue-600/10 text-blue-600"
+                  : "text-[#71717A] hover:bg-white/5 hover:text-white"
               }`}
               title={item.label}
             >
-              <Icon className="w-6 h-6" />
+              <Icon className="w-5 h-5" />
               {item.badge > 0 ? (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-white dark:border-[#1C1C1E]">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm shadow-red-500/30 border-2 border-[#161618]">
                   {item.badge}
                 </span>
               ) : null}
@@ -200,47 +190,44 @@ export default function Header() {
       </nav>
 
       {/* Bottom Actions */}
-      <div className="flex flex-col items-center gap-4 mt-auto">
+      <div className="flex flex-col items-center gap-3 mt-auto px-2">
         {/* Dark mode toggle */}
-        <motion.button
+        <button
           onClick={toggleDarkMode}
-          whileTap={{ scale: 0.95 }}
-          className="p-3 rounded-2xl text-[#8E8E93] hover:bg-black/5 dark:hover:bg-white/5 transition-colors w-12 h-12 flex items-center justify-center"
+          className="p-3 rounded-lg text-[#71717A] hover:bg-white/5 hover:text-white transition-colors w-12 h-12 flex items-center justify-center"
           title={settings.darkMode ? "Light mode" : "Dark mode"}
         >
-          {settings.darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-        </motion.button>
+          {settings.darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
 
         {/* Profile */}
-        <motion.button
+        <button
           onClick={() => router.push("/profile")}
-          whileTap={{ scale: 0.95 }}
-          className={`p-0.5 rounded-full transition-all w-12 h-12 flex items-center justify-center ${
+          className={`p-0.5 rounded-lg transition-all w-12 h-12 flex items-center justify-center ${
             isActive("/profile")
-              ? "ring-2 ring-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+              ? "ring-2 ring-blue-600"
               : "hover:scale-105"
           }`}
           title="Profile"
         >
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-700">
             <img
               src={getAvatarUrl(user.name)}
               alt={user.name}
               className="w-full h-full object-cover"
             />
           </div>
-        </motion.button>
+        </button>
 
         {/* Logout */}
-        <motion.button
+        <button
           onClick={handleLogout}
-          whileTap={{ scale: 0.95 }}
-          className="p-3 rounded-2xl text-red-500 transition-all w-12 h-12 flex items-center justify-center mt-2 bg-red-500/10 hover:bg-red-500/20 dark:shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+          className="p-3 rounded-lg text-red-400 transition-colors w-12 h-12 flex items-center justify-center mt-1 bg-red-500/10 hover:bg-red-500/20"
           title="Logout"
         >
           <LogOut className="w-5 h-5" />
-        </motion.button>
+        </button>
       </div>
-    </motion.header>
+    </header>
   );
 }

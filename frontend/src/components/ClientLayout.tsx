@@ -31,7 +31,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F2F2F7] dark:bg-[#0A0A0F]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F2F2F7] dark:bg-[#0D0D0F]">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -42,9 +42,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }
 
   const bgClass = settings.theme === 'deep' 
-    ? 'bg-[#0A0A0F]' 
+    ? 'bg-[#0D0D0F]' 
     : settings.darkMode 
-      ? 'bg-[#000000]' 
+      ? 'bg-[#0D0D0F]' 
       : 'bg-[#F2F2F7]';
 
   return (

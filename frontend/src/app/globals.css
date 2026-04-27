@@ -5,8 +5,18 @@
 :root {
   /* Base colors */
   --synch-base: #F2F2F7;
-  --synch-base-dark: #000000;
+  --synch-base-dark: #0D0D0F;
   --synch-deep: #0A0A0F;
+  
+  /* Soft black matte dark mode */
+  --synch-dark-card: #161618;
+  --synch-dark-surface: #121214;
+  --synch-dark-border: rgba(255, 255, 255, 0.08);
+  
+  /* Text colors dark mode */
+  --synch-text-primary: #FAFAFA;
+  --synch-text-secondary: #A1A1AA;
+  --synch-text-muted: #71717A;
   
   /* Brand colors */
   --synch-purple: #8B5CF6;
@@ -43,15 +53,15 @@
   }
   
   h1 {
-    @apply text-4xl sm:text-5xl font-bold tracking-tight;
+    @apply text-2xl sm:text-3xl font-semibold;
   }
   
   h2 {
-    @apply text-3xl sm:text-4xl font-bold tracking-tight;
+    @apply text-xl sm:text-2xl font-semibold;
   }
   
   h3 {
-    @apply text-xl sm:text-2xl font-semibold;
+    @apply text-lg font-medium;
   }
   
   p {
@@ -84,53 +94,10 @@ html {
   @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-black;
 }
 
-/* Animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* Minimal Transitions - no playful animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slide-in-right {
@@ -479,48 +446,37 @@ html {
   padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
-/* ==================== VIBE GRADIENTS ==================== */
+/* Static vibe backgrounds (no animation for performance) */
 .vibe-techie {
-  background: linear-gradient(135deg, #06B6D4, #3B82F6, #8B5CF6);
+  background: #06B6D4;
 }
 
 .vibe-artist {
-  background: linear-gradient(135deg, #EC4899, #8B5CF6, #EF4444);
+  background: #EC4899;
 }
 
 .vibe-gamer {
-  background: linear-gradient(135deg, #10B981, #06B6D4, #3B82F6);
+  background: #10B981;
 }
 
 .vibe-foodie {
-  background: linear-gradient(135deg, #F59E0B, #EF4444, #F97316);
+  background: #F59E0B;
 }
 
 .vibe-gymbro {
-  background: linear-gradient(135deg, #EF4444, #F97316, #F59E0B);
+  background: #EF4444;
 }
 
 .vibe-traveler {
-  background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
+  background: #8B5CF6;
 }
 
 .vibe-bookworm {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6, #A855F7);
+  background: #6366F1;
 }
 
 .vibe-entrepreneur {
-  background: linear-gradient(135deg, #14B8A6, #10B981, #22C55E);
-}
-
-/* Animated shimmer for vibe cards */
-@keyframes shimmer-vibe {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-.vibe-shimmer {
-  background-size: 200% auto;
-  animation: shimmer-vibe 3s linear infinite;
+  background: #14B8A6;
 }
 
 /* Glass with colored tint */

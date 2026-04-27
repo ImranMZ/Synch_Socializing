@@ -7,6 +7,7 @@ import AIInsightModal from "../components/AIInsightModal";
 import VibeQuizModal from "../components/VibeQuizModal";
 import HiddenTruthModal from "../components/HiddenTruthModal";
 import MagneticButton from "../components/MagneticButton";
+import LayeredStackCard from "../components/LayeredStackCard";
 import { api, UserProfile, MatchProfile } from "../lib/api";
 import confetti from "canvas-confetti";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
@@ -49,7 +50,7 @@ const getVibeColor = (vibe: string) => {
 };
 
 const GlassSkeleton = () => (
-  <div className="w-full bg-white/30 dark:bg-[#1C1C1E]/30 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 shadow-2xl overflow-hidden relative">
+  <div className="w-full bg-white/30 dark:bg-[#161618]/30 backdrop-blur-2xl border border-white/20 rounded-[40px] p-8 shadow-sm overflow-hidden relative">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" style={{ animation: "shimmer 1.5s infinite" }} />
     <style dangerouslySetInnerHTML={{__html: `
       @keyframes shimmer {
@@ -57,7 +58,7 @@ const GlassSkeleton = () => (
       }
     `}} />
     <div className="w-1/2 h-8 bg-black/10 dark:bg-white/10 rounded-lg mb-4" />
-    <div className="w-1/4 h-10 bg-black/10 dark:bg-white/10 rounded-2xl mb-8" />
+    <div className="w-1/4 h-10 bg-black/10 dark:bg-white/10 rounded-lg mb-8" />
     <div className="space-y-4">
       {[1,2,3,4].map(i => <div key={i} className="w-full h-8 bg-black/5 dark:bg-white/5 rounded-lg" />)}
     </div>
@@ -94,6 +95,9 @@ export default function Home() {
   const [aiModalData, setAiModalData] = useState<any>(null);
   const [aiModalLoading, setAiModalLoading] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
+
+  const [whyMatchData, setWhyMatchData] = useState<any>(null);
+  const [dealbreakersData, setDealbreakersData] = useState<any>(null);
 
   // Parallax Scroll logic (window scroll)
   const { scrollY } = useScroll();
@@ -183,6 +187,9 @@ export default function Home() {
       });
       
       setMatches(randomizedData);
+      if (randomizedData.length > 0) {
+        loadStackedCardData(randomizedData[0]);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -214,9 +221,28 @@ export default function Home() {
     setAiModalLoading(false);
   };
 
+  const loadStackedCardData = async (match: Match) => {
+    const profile: UserProfile = { ...formData, Hobbies: formData.Hobbies.join(", "), strict_city: false };
+    const matchProfile: MatchProfile = { ...match, Age: Number(match.Age) || 25, Education: match.Education || "Unknown", Profession: match.Profession || "Unknown" };
+
+    try {
+      const [whyResult, dealResult] = await Promise.all([
+        api.getMatchExplanation(profile, matchProfile),
+        api.getDealbreakers(profile),
+      ]);
+      setWhyMatchData(whyResult);
+      setDealbreakersData(dealResult);
+    } catch (e) {
+      console.error("Stacked card loading error:", e);
+    }
+  };
+
   const handleSkip = () => {
     if (currentIndex < matches.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      if (aiEnabled) {
+        loadStackedCardData(matches[currentIndex + 1]);
+      }
     }
   };
 
@@ -233,12 +259,10 @@ export default function Home() {
   const vibeColorClass = getVibeColor(formData.Vibe);
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white flex flex-col items-center justify-center p-6 font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#0D0D0F] text-black dark:text-[#FAFAFA] flex flex-col items-center justify-center p-6 font-sans">
       
-      {/* Vibe-Responsive Background Blurs */}
-      <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] ${vibeColorClass} rounded-full blur-[120px] pointer-events-none transition-colors duration-1000`} />
-      <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none transition-colors duration-1000`} />
-
+      {/* No decorative backgrounds */}
+      
       <AnimatePresence>
         
         {step === 0 && (
@@ -248,82 +272,82 @@ export default function Home() {
               animate={{ scale: 1, opacity: 1 }}
               className="w-full max-w-[240px] mb-8"
             >
-              <img src="/logo-medium.svg" alt="Synch Branding" className="w-full h-auto drop-shadow-[0_0_15px_rgba(123,47,247,0.2)]" />
+              <img src="/logo-medium.svg" alt="Synch Branding" className="w-full h-auto" />
             </motion.div>
             
-            <div className="flex items-center gap-3 mb-6 px-4 py-2 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10">
-              <span className={`text-sm font-medium ${aiEnabled ? 'text-blue-500' : 'text-[#8E8E93]'}`}>AI Features</span>
+            <div className="flex items-center gap-3 mb-6 px-4 py-2 bg-white dark:bg-[#161618] rounded-lg border border-black/5 dark:border-white/8">
+              <span className={`text-sm ${aiEnabled ? 'text-blue-600' : 'text-[#71717A]'}`}>AI Features</span>
               <button 
                 onClick={() => setAiEnabled(!aiEnabled)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${aiEnabled ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                className={`relative w-12 h-6 rounded-lg transition-colors ${aiEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
               >
-                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
+                <span className={`absolute top-1 w-4 h-4 rounded-lg bg-white shadow-sm transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
               </button>
-              <span className={`text-xs ${aiEnabled ? 'text-blue-500' : 'text-[#8E8E93]'}`}>{aiEnabled ? 'ON' : 'OFF'}</span>
+              <span className={`text-xs ${aiEnabled ? 'text-blue-600' : 'text-[#71717A]'}`}>{aiEnabled ? 'ON' : 'OFF'}</span>
             </div>
             
-            <p className="text-[#8E8E93] mb-8 text-center text-lg">Who are you looking for today?</p>
+            <p className="text-[#71717A] mb-8 text-center text-lg">Who are you looking for today?</p>
             
             <div className="w-full flex flex-col gap-4">
               <button 
                 onClick={() => handleSelectGoal("Partner")}
-                className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
+                className="w-full bg-white/70 dark:bg-[#161618]/70 backdrop-blur-xl border border-black/5 dark:border-white/8 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-500">
+                  <div className="w-12 h-12 bg-pink-500/10 rounded-lg flex items-center justify-center text-pink-500">
                     <Heart fill="currentColor" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-xl">A Partner</h3>
-                    <p className="text-sm text-[#8E8E93]">Find your soulmate</p>
+                    <h3 className="font-medium text-xl">A Partner</h3>
+                    <p className="text-sm text-[#71717A]">Find your soulmate</p>
                   </div>
                 </div>
-                <ChevronRight className="text-[#8E8E93]" />
+                <ChevronRight className="text-[#71717A]" />
               </button>
 
               <button 
                 onClick={() => handleSelectGoal("Friends")}
-                className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
+                className="w-full bg-white/70 dark:bg-[#161618]/70 backdrop-blur-xl border border-black/5 dark:border-white/8 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-600">
                     <User />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-xl">A Friend</h3>
-                    <p className="text-sm text-[#8E8E93]">Expand your circle</p>
+                    <h3 className="font-medium text-xl">A Friend</h3>
+                    <p className="text-sm text-[#71717A]">Expand your circle</p>
                   </div>
                 </div>
-                <ChevronRight className="text-[#8E8E93]" />
+                <ChevronRight className="text-[#71717A]" />
               </button>
             </div>
 
             {stats && (
-              <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#1C1C1E]/40 backdrop-blur-md rounded-3xl p-6 border border-black/5 dark:border-white/10">
-                <h3 className="text-sm font-semibold text-[#8E8E93] uppercase tracking-wider mb-4 flex items-center gap-2"><Activity className="w-4 h-4" /> Community Insights</h3>
+              <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#161618]/40 bg-gray-50 dark:bg-[#161618] rounded-lg p-6 border border-black/5 dark:border-white/8">
+                <h3 className="text-sm font-medium text-[#71717A] uppercase tracking-wider mb-4 flex items-center gap-2"><Activity className="w-4 h-4" /> Community Insights</h3>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs text-[#8E8E93] mb-2">Top Hobbies</p>
+                    <p className="text-xs text-[#71717A] mb-2">Top Hobbies</p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(stats.top_hobbies || {}).slice(0, 5).map(([hobby, pct]) => (
-                        <div key={hobby} className="bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full text-xs font-medium border border-blue-500/20">
+                        <div key={hobby} className="bg-blue-500/10 text-blue-600 px-3 py-1 rounded-lg text-xs font-medium border border-blue-500/20">
                           {hobby}: {String(pct)}%
                         </div>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-[#8E8E93] mb-2">Top Vibes</p>
+                    <p className="text-xs text-[#71717A] mb-2">Top Vibes</p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(stats.top_vibes || {}).slice(0, 3).map(([vibe, pct]) => (
-                        <div key={vibe} className="bg-purple-500/10 text-purple-500 px-3 py-1 rounded-full text-xs font-medium border border-purple-500/20">
+                        <div key={vibe} className="bg-purple-500/10 text-purple-500 px-3 py-1 rounded-lg text-xs font-medium border border-purple-500/20">
                           {vibe}: {String(pct)}%
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="text-center pt-2">
-                     <p className="text-xs font-medium text-[#8E8E93]">Join {stats.total_users?.toLocaleString()} users on Synch</p>
+                     <p className="text-xs font-medium text-[#71717A]">Join {stats.total_users?.toLocaleString()} users on Synch</p>
                   </div>
                 </div>
               </motion.div>
@@ -333,20 +357,20 @@ export default function Home() {
 
         {step === 0.5 && (
           <motion.div key="step0.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
-            <button onClick={() => setStep(0)} className="mb-6 text-blue-500 font-medium">← Back</button>
-            <h2 className="text-3xl font-bold mb-8">I identify as</h2>
+            <button onClick={() => setStep(0)} className="mb-6 text-blue-600 font-medium">← Back</button>
+            <h2 className="text-3xl font-medium mb-8">I identify as</h2>
             <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Select your gender</h3>
+              <h3 className="text-lg font-medium mb-4 text-[#71717A]">Select your gender</h3>
               <div className="flex flex-wrap gap-3">
                 <MagneticButton 
                   onClick={() => { setFormData({ ...formData, Gender: "Male" }); setStep(1); }}
-                  className="px-8 py-5 rounded-3xl font-bold bg-blue-500 text-white shadow-xl shadow-blue-500/25 flex-1"
+                  className="px-8 py-5 rounded-lg font-medium bg-blue-500 text-white shadow-sm shadow-blue-500/25 flex-1"
                 >
                   Male
                 </MagneticButton>
                 <MagneticButton 
                   onClick={() => { setFormData({ ...formData, Gender: "Female" }); setStep(1); }}
-                  className="px-8 py-5 rounded-3xl font-bold bg-pink-500 text-white shadow-xl shadow-pink-500/25 flex-1"
+                  className="px-8 py-5 rounded-lg font-medium bg-pink-500 text-white shadow-sm shadow-pink-500/25 flex-1"
                 >
                   Female
                 </MagneticButton>
@@ -357,40 +381,44 @@ export default function Home() {
 
         {step === 1 && (
           <motion.div key="step1" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
-            <button onClick={() => setStep(0)} className="mb-6 text-blue-500 font-medium">← Back</button>
-            <h2 className="text-3xl font-bold mb-8">Tell us about you</h2>
+            <button onClick={() => setStep(0)} className="mb-6 text-blue-600 font-medium">← Back</button>
+            <h2 className="text-3xl font-medium mb-8">Tell us about you</h2>
             <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Your Core Vibe</h3>
+              <h3 className="text-lg font-medium mb-4 text-[#71717A] dark:text-[#A1A1AA]">Your Core Vibe</h3>
               <div className="flex flex-wrap gap-3">
                 {VIBE_OPTIONS.map(v => (
-                  <button 
+                  <motion.button 
                     key={v}
                     onClick={() => setFormData({ ...formData, Vibe: v })}
-                    className={`px-5 py-3 rounded-full font-medium transition-all ${
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`px-5 py-3 rounded-lg font-medium transition-all duration-300 ${
                       formData.Vibe === v 
-                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
-                      : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
+                      ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
+                      : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
                     }`}
                   >
                     {v}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
 
             <div className="mb-10">
-              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Your Hobbies</h3>
+              <h3 className="text-lg font-medium mb-4 text-[#71717A] dark:text-[#A1A1AA]">Your Hobbies</h3>
               <div className="flex flex-wrap gap-3">
                 {HOBBIES_OPTIONS.map(h => {
                   const isSelected = formData.Hobbies.includes(h);
                   return (
-                    <button 
+                    <motion.button 
                       key={h}
                       onClick={() => toggleHobby(h)}
-                      className={`px-5 py-3 rounded-full font-medium flex items-center gap-2 transition-all ${
+                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                      className={`px-5 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 ${
                         isSelected 
-                        ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
-                        : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
+                        ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
+                        : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
                       }`}
                     >
                       {isSelected && <Check className="w-4 h-4" />}
@@ -404,7 +432,7 @@ export default function Home() {
             <MagneticButton 
               onClick={() => setStep(1.5)}
               disabled={!formData.Vibe || formData.Hobbies.length === 0}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               Continue
             </MagneticButton>
@@ -413,24 +441,26 @@ export default function Home() {
 
         {step === 1.5 && (
           <motion.div key="step1.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
-            <button onClick={() => setStep(1)} className="mb-6 text-blue-500 font-medium">← Back</button>
-            <h2 className="text-3xl font-bold mb-8">Where are you located?</h2>
+            <button onClick={() => setStep(1)} className="mb-6 text-blue-600 font-medium">← Back</button>
+            <h2 className="text-3xl font-medium mb-8">Where are you located?</h2>
             
             <div className="mb-10">
-              <h3 className="text-lg font-semibold mb-4 text-[#8E8E93]">Select your City</h3>
+              <h3 className="text-lg font-medium mb-4 text-[#71717A] dark:text-[#A1A1AA]">Select your City</h3>
               <div className="flex flex-wrap gap-3">
                 {CITY_OPTIONS.map(c => (
-                  <button 
+                  <motion.button 
                     key={c}
                     onClick={() => setFormData({ ...formData, City: c })}
-                    className={`px-5 py-3 rounded-full font-medium transition-all ${
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`px-5 py-3 rounded-lg font-medium transition-all duration-300 ${
                       formData.City === c 
-                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
-                      : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
+                      ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
+                      : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
                     }`}
                   >
                     {c}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -438,7 +468,7 @@ export default function Home() {
             <MagneticButton 
               onClick={() => setStep(2)}
               disabled={!formData.City}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               Continue
             </MagneticButton>
@@ -447,8 +477,8 @@ export default function Home() {
 
         {step === 2 && (
           <motion.div key="step2" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
-            <button onClick={() => setStep(1.5)} className="mb-6 text-blue-500 font-medium">← Back</button>
-            <h2 className="text-3xl font-bold mb-8">Lifestyle Details</h2>
+            <button onClick={() => setStep(1.5)} className="mb-6 text-blue-600 font-medium">← Back</button>
+            <h2 className="text-3xl font-medium mb-8">Lifestyle Details</h2>
             
             {[
               { label: "Religiosity", options: RELIGIOSITY_OPTIONS, field: "Religiosity" },
@@ -457,20 +487,22 @@ export default function Home() {
               { label: "Communication Style", options: COMM_STYLE_OPTIONS, field: "Comm_Style" },
             ].map(group => (
               <div key={group.field} className="mb-8">
-                <h3 className="text-lg font-semibold mb-3 text-[#8E8E93]">{group.label}</h3>
+                <h3 className="text-lg font-medium mb-3 text-[#71717A] dark:text-[#A1A1AA]">{group.label}</h3>
                 <div className="flex flex-wrap gap-2">
                   {group.options.map(opt => (
-                    <button 
+                    <motion.button 
                       key={opt}
                       onClick={() => setFormData({ ...formData, [group.field]: opt })}
-                      className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
                         (formData as any)[group.field] === opt 
-                        ? 'bg-blue-500 text-white shadow-sm font-bold dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
-                        : 'bg-white/50 dark:bg-[#1C1C1E]/50 border border-black/5 dark:border-white/10 text-[#8E8E93]'
+                        ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]' 
+                        : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
                       }`}
                     >
                       {opt}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -478,7 +510,7 @@ export default function Home() {
 
             <MagneticButton 
               onClick={() => aiEnabled ? setQuizModalOpen(true) : handleMatch()}
-              className="w-full bg-blue-500 text-white py-4 rounded-full font-semibold text-lg shadow-lg shadow-blue-500/40 mt-4 gap-2 dark:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+              className="w-full bg-blue-500 text-white py-4 rounded-lg font-medium text-lg shadow-lg shadow-blue-500/40 mt-4 gap-2 dark:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
             >
               <Sparkles className="w-5 h-5" />
               Find My Match
@@ -487,7 +519,7 @@ export default function Home() {
             {aiEnabled && (
               <MagneticButton 
                 onClick={fetchHiddenTruth}
-                className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 py-3 rounded-full font-medium mt-3 gap-2 dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 py-3 rounded-lg font-medium mt-3 gap-2 dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
               >
                 Reveal My Hidden Truth
               </MagneticButton>
@@ -502,7 +534,7 @@ export default function Home() {
               <GlassSkeleton />
             ) : matches.length > 0 && currentIndex < matches.length ? (
               <div className="w-full">
-                <h2 className="text-center text-[#8E8E93] font-medium mb-4 uppercase tracking-widest text-xs">Top Match #{currentIndex + 1}</h2>
+                <h2 className="text-center text-[#71717A] font-medium mb-4 uppercase tracking-widest text-xs">Top Match #{currentIndex + 1}</h2>
                 
                 <AnimatePresence mode="wait">
                   <motion.div 
@@ -517,7 +549,7 @@ export default function Home() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                    className="w-full bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-2xl border border-black/5 dark:border-white/10 rounded-[40px] shadow-2xl overflow-hidden relative cursor-grab active:cursor-grabbing"
+                    className="w-full bg-white/70 dark:bg-[#161618]/70 backdrop-blur-2xl border border-black/5 dark:border-white/8 rounded-[40px] shadow-sm overflow-hidden relative cursor-grab active:cursor-grabbing"
                     style={{ overflowY: "auto", maxHeight: "65vh" }}
                   >
                     <motion.div style={{ y: bgY }} className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 pointer-events-none" />
@@ -529,7 +561,7 @@ export default function Home() {
                         <motion.div 
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="w-32 h-32 rounded-full overflow-hidden bg-white dark:bg-white/5 border-4 border-white dark:border-white/10 shadow-2xl relative z-20 mb-4"
+                          className="w-32 h-32 rounded-lg overflow-hidden bg-white dark:bg-white/5 border-4 border-white dark:border-white/8 shadow-sm relative z-20 mb-4"
                         >
                           <img 
                             src={getAvatarUrl(matches[currentIndex].Name)} 
@@ -538,56 +570,66 @@ export default function Home() {
                           />
                         </motion.div>
                         <h3 className="text-3xl font-extrabold tracking-tight text-center" style={{ fontVariationSettings: '"wght" 800' }}>{matches[currentIndex].Name || "Unknown"}</h3>
-                        <div className="mt-2 bg-blue-500 text-white font-bold text-sm px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                        <div className="mt-2 bg-blue-500 text-white font-medium text-sm px-4 py-1.5 rounded-lg shadow-lg shadow-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
                           {matches[currentIndex].Compatibility_Score}% Compatibility
                         </div>
                       </div>
 
                       <div className="space-y-4 relative z-10">
                         <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                          <span className="text-[#8E8E93]">Demographics</span>
-                          <span className="font-semibold text-right">{matches[currentIndex].Gender}, {matches[currentIndex].Age} yrs<br/><span className="text-sm font-normal text-[#8E8E93]">{matches[currentIndex].Location}</span></span>
+                          <span className="text-[#71717A]">Demographics</span>
+                          <span className="font-medium text-right">{matches[currentIndex].Gender}, {matches[currentIndex].Age} yrs<br/><span className="text-sm font-normal text-[#71717A]">{matches[currentIndex].Location}</span></span>
                         </div>
                         
                         <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                          <span className="text-[#8E8E93]">Vibe</span>
-                          <span className="font-bold text-blue-500">{matches[currentIndex].Vibe}</span>
+                          <span className="text-[#71717A]">Vibe</span>
+                          <span className="font-medium text-blue-600">{matches[currentIndex].Vibe}</span>
                         </div>
                         <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                          <span className="text-[#8E8E93]">Hobbies</span>
-                          <span className="font-semibold text-right max-w-[60%]">{matches[currentIndex].Hobbies || "None listed"}</span>
+                          <span className="text-[#71717A]">Hobbies</span>
+                          <span className="font-medium text-right max-w-[60%]">{matches[currentIndex].Hobbies || "None listed"}</span>
                         </div>
                         <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                          <span className="text-[#8E8E93]">Background</span>
-                          <span className="font-semibold text-right">{matches[currentIndex].Education}<br/><span className="text-sm font-normal text-[#8E8E93]">{matches[currentIndex].Profession}</span></span>
+                          <span className="text-[#71717A]">Background</span>
+                          <span className="font-medium text-right">{matches[currentIndex].Education}<br/><span className="text-sm font-normal text-[#71717A]">{matches[currentIndex].Profession}</span></span>
                         </div>
                       </div>
                     </div>
                   </motion.div>
                 </AnimatePresence>
 
-                {aiEnabled && (
-                <div className="grid grid-cols-3 gap-2 mt-6">
-                  <button 
-                    onClick={() => openAIModal("explanation", matches[currentIndex])}
-                    className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 active:scale-[0.98]"
-                  >
-                    <Lightbulb className="w-5 h-5 text-yellow-600" />
-                    <span className="text-xs font-medium text-yellow-700">Why match?</span>
-                  </button>
+                {aiEnabled && matches[currentIndex] && (
+                <div className="mt-6 space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <LayeredStackCard
+                      title="Why Match?"
+                      icon={Lightbulb}
+                      color="from-yellow-500 to-orange-500"
+                      options={[
+                        { label: "Vibe Sync", emoji: "🎵", content: whyMatchData?.explanation || "Loading..." },
+                        { label: "Lifestyle", emoji: "🌙", content: whyMatchData?.explanation || "Loading..." },
+                        { label: "Future Goals", emoji: "🎯", content: whyMatchData?.explanation || "Loading..." },
+                      ]}
+                      onSelect={() => openAIModal("explanation", matches[currentIndex])}
+                    />
+                    <LayeredStackCard
+                      title="Dealbreakers"
+                      icon={Activity}
+                      color="from-amber-500 to-red-500"
+                      options={[
+                        { label: "Compatibility", emoji: "⚠️", content: dealbreakersData?.insights?.[0]?.message || "Loading..." },
+                        { label: "Lifestyle", emoji: "🏠", content: dealbreakersData?.insights?.[1]?.message || "..." },
+                        { label: "Communication", emoji: "💬", content: dealbreakersData?.insights?.[2]?.message || "..." },
+                      ]}
+                      onSelect={() => openAIModal("dealbreakers", matches[currentIndex])}
+                    />
+                  </div>
                   <button 
                     onClick={() => openAIModal("wavelength", matches[currentIndex])}
-                    className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 active:scale-[0.98]"
+                    className="w-full bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
                     <TrendingUp className="w-5 h-5 text-purple-600" />
-                    <span className="text-xs font-medium text-purple-700">Wavelength</span>
-                  </button>
-                  <button 
-                    onClick={() => openAIModal("prediction", matches[currentIndex])}
-                    className="bg-pink-500/10 border border-pink-500/20 p-3 rounded-2xl flex flex-col items-center gap-1 active:scale-[0.98]"
-                  >
-                    <Zap className="w-5 h-5 text-pink-600" />
-                    <span className="text-xs font-medium text-pink-700">Predict</span>
+                    <span className="text-xs font-medium text-purple-700">View Wavelength Compatibility</span>
                   </button>
                 </div>
                 )}
@@ -595,14 +637,14 @@ export default function Home() {
                 <div className="flex gap-4 mt-6">
                   <MagneticButton 
                     onClick={handleSkip}
-                    className="flex-1 bg-white/50 dark:bg-[#1C1C1E]/50 backdrop-blur-md border border-black/5 dark:border-white/10 p-4 rounded-full gap-2 font-semibold text-[#8E8E93]"
+                    className="flex-1 bg-white/50 dark:bg-[#161618]/80 bg-gray-50 dark:bg-[#161618] border border-black/5 dark:border-white/8 p-4 rounded-lg gap-2 font-medium text-[#71717A]"
                   >
                     <X className="w-5 h-5 text-red-500" />
                     Skip (Swipe Left)
                   </MagneticButton>
                   <MagneticButton 
                     onClick={handleConnect}
-                    className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-full gap-2 font-bold dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                    className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-lg gap-2 font-medium dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                   >
                     <Heart className="w-5 h-5" fill="currentColor" />
                     Connect (Swipe Right)
@@ -610,7 +652,7 @@ export default function Home() {
                 </div>
                 
                 <div className="mt-6 text-center">
-                  <button onClick={() => setStep(0)} className="text-sm text-[#8E8E93] transition-colors">
+                  <button onClick={() => setStep(0)} className="text-sm text-[#71717A] transition-colors">
                     Start Over
                   </button>
                 </div>
@@ -618,9 +660,9 @@ export default function Home() {
               </div>
             ) : (
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">No more matches!</h2>
-                <p className="text-[#8E8E93] mb-8">You've gone through all the top recommendations.</p>
-                <MagneticButton onClick={() => setStep(0)} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-full font-semibold mx-auto">
+                <h2 className="text-2xl font-medium mb-2">No more matches!</h2>
+                <p className="text-[#71717A] mb-8">You've gone through all the top recommendations.</p>
+                <MagneticButton onClick={() => setStep(0)} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-lg font-medium mx-auto">
                   Try Again
                 </MagneticButton>
               </div>
