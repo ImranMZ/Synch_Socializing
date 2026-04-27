@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Bell, Sparkles, Heart, Eye, Users, Trash2, Check, Search } from "lucide-react";
 import { useAuth, getActivity, ActivityItem, markActivityRead, clearActivity } from "@/lib/auth";
+import { getRelativeTime } from "@/lib/utils";
 
 export default function ActivityPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [filter, setFilter] = useState<"all" | "new_match" | "viewed" | "similar">("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -22,8 +24,16 @@ export default function ActivityPage() {
 
   const filteredActivity = activity.filter(item => {
     if (filter !== "all" && item.type !== filter) return false;
+    if (search && !item.title.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const filterCounts = {
+    all: activity.length,
+    new_match: activity.filter(a => a.type === "new_match").length,
+    viewed: activity.filter(a => a.type === "viewed").length,
+    similar: activity.filter(a => a.type === "similar").length,
+  };
 
   const unreadCount = activity.filter(a => !a.read).length;
 
@@ -91,6 +101,18 @@ export default function ActivityPage() {
           </div>
 
           {/* Filters */}
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+          </div>
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
             {(["all", "new_match", "viewed", "similar"] as const).map((f) => (
               <motion.button
@@ -104,9 +126,9 @@ export default function ActivityPage() {
                     : "bg-white dark:bg-[#1C1C1E] text-gray-600 dark:text-gray-400"
                 }`}
               >
-                {f === "all" ? "All" :
-                 f === "new_match" ? "❤️ Matches" :
-                 f === "viewed" ? "👁 Views" : "✨ Similar"}
+                {f === "all" ? `All (${filterCounts.all})` :
+                 f === "new_match" ? `❤️ (${filterCounts.new_match})` :
+                 f === "viewed" ? `👁 (${filterCounts.viewed})` : `✨ (${filterCounts.similar})`}
               </motion.button>
             ))}
           </div>

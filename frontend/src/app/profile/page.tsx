@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth, getAvatarUrl } from "@/lib/auth";
-import { Sparkles, ArrowRight, Camera, Heart, User, Settings, Trash2, LogOut } from "lucide-react";
+import { getProfileCompleteness } from "@/lib/utils";
+import { Sparkles, ArrowRight, Heart, Trash2, LogOut, CheckCircle, AlertCircle, Settings } from "lucide-react";
 
 const avatarStyles = [
   { id: "avataaars", name: "Avatar" },
@@ -139,6 +140,12 @@ export default function ProfilePage() {
                   <motion.div>
                     <h2 className="text-3xl font-bold">{user.name}</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-lg">@{user.name?.toLowerCase().replace(/\s+/g, "")}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-sm text-gray-500">
+                        {getProfileCompleteness(user)}% complete
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
                       Joined {new Date(user.createdAt).toLocaleDateString()}
                     </p>

@@ -135,18 +135,18 @@ Make it uncomfortably accurate. Make it theirs only. Make it memorable."""
         if not line:
             continue
             
-        # Detect headers
-        if any(h in line for h in ["Layer One", "🌑", "Layer 1"]):
+        # Detect headers with more flexibility
+        if any(h.lower() in line.lower() for h in ["Layer One", "🌑", "Layer 1"]):
             current_layer = 1
-            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌑", "").replace("Layer One", "").replace("Layer 1", "").strip()
+            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌑", "").strip()
             if content: parsed_layers[1].append(content)
-        elif any(h in line for h in ["Layer Two", "🌘", "Layer 2"]):
+        elif any(h.lower() in line.lower() for h in ["Layer Two", "🌘", "Layer 2"]):
             current_layer = 2
-            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌘", "").replace("Layer Two", "").replace("Layer 2", "").strip()
+            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌘", "").strip()
             if content: parsed_layers[2].append(content)
-        elif any(h in line for h in ["Layer Three", "🌕", "Layer 3"]):
+        elif any(h.lower() in line.lower() for h in ["Layer Three", "🌕", "Layer 3"]):
             current_layer = 3
-            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌕", "").replace("Layer Three", "").replace("Layer 3", "").strip()
+            content = line.split(":", 1)[-1].strip() if ":" in line else line.replace("🌕", "").strip()
             if content: parsed_layers[3].append(content)
         elif current_layer > 0:
             parsed_layers[current_layer].append(line)
@@ -156,8 +156,8 @@ Make it uncomfortably accurate. Make it theirs only. Make it memorable."""
     layer_three = " ".join(parsed_layers[3]) if parsed_layers[3] else starter_three
     
     return {
-        "layer_one": layer_one.strip(),
-        "layer_two": layer_two.strip(),
-        "layer_three": layer_three.strip(),
+        "layer_one": layer_one.replace("🌑", "").replace("Layer One:", "").strip(),
+        "layer_two": layer_two.replace("🌘", "").replace("Layer Two:", "").strip(),
+        "layer_three": layer_three.replace("🌕", "").replace("Layer Three:", "").strip(),
         "generated_at": "now"
     }

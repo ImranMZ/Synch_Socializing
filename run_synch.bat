@@ -13,7 +13,7 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8001') do taskkill /f /pid %
 
 echo [2/4] Starting Synch Backend (Port 8001)...
 cd /d %~dp0backend
-start "Synch Backend" /min cmd /c "..\venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8001"
+start "Synch Backend" /min cmd /c "venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8001"
 
 echo [3/4] Starting Synch Frontend (Port 3000)...
 cd /d %~dp0frontend

@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { History, Search, Heart, X, Trash2, RefreshCw, Sparkles } from "lucide-react";
+import { History, Search, Heart, Trash2, Sparkles } from "lucide-react";
 import { useAuth, getMatchHistory, MatchHistoryItem } from "@/lib/auth";
+import { getRelativeTime } from "@/lib/utils";
 
 export default function HistoryPage() {
   const { user } = useAuth();

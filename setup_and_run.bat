@@ -34,8 +34,11 @@ echo [2/4] Installing Backend Dependencies...
 call venv\Scripts\activate
 pip install -r backend/requirements.txt
 if not exist "backend\.env" (
-    echo [INFO] Creating .env for backend...
-    echo GROQ_API_KEY=YOUR_GROQ_API_KEY_HERE > backend\.env
+    if exist "backend\.env.example" (
+        copy backend\.env.example backend\.env
+    ) else (
+        echo GROQ_API_KEY= > backend\.env
+    )
     echo [WARNING] Please update backend/.env with your actual Groq API Key!
 )
 

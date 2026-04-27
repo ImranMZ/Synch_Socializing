@@ -1,0 +1,84 @@
+@echo off
+setlocal
+title Synch - Unified Launcher
+
+echo.
+echo ============================================================
+echo   Synch - Automated Setup ^& Launcher
+echo ============================================================
+echo.
+
+:: Check for Python
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] Python is not installed. Please install Python 3.8+ and try again.
+    pause
+    exit /b 1
+)
+
+:: Check for Node.js
+node --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] Node.js is not installed. Please install Node.js and try again.
+    pause
+    exit /b 1
+)
+
+:: Setup Backend
+echo [1/4] Checking Backend...
+cd /d "%~dp0backend"
+if not exist "venv" (
+    echo [INFO] Creating virtual environment...
+    python -m venv venv
+)
+
+echo [2/4] Installing Backend Dependencies...
+call venv\Scripts\activate
+pip install -r requirements.txt
+
+if not exist ".env" (
+    if exist ".env.example" (
+        copy .env.example .env
+        echo [WARNING] Created .env from .env.example. Please check it!
+    )
+)
+
+:: Setup Frontend
+echo [3/4] Checking Frontend...
+cd /d "%~dp0frontend"
+if not exist "node_modules" (
+    echo [INFO] Installing frontend dependencies - this may take a minute...
+    call npm install
+)
+
+:: Run Everything
+echo [4/4] Starting Synch Services...
+echo.
+echo [INFO] Cleaning up existing processes on ports 3000 and 8001...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :3000') do taskkill /f /pid %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8001') do taskkill /f /pid %%a >nul 2>&1
+
+cd /d "%~dp0"
+echo Starting Backend...
+start "Synch Backend" /min cmd /c "cd backend && venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8001"
+
+echo Starting Frontend...
+start "Synch Frontend" /min cmd /c "cd frontend && npm run dev"
+
+echo.
+echo Waiting for services to initialize...
+timeout /t 5 /nobreak >nul
+
+echo Launching Synch Web App...
+start http://localhost:3000
+
+echo.
+echo ============================================================
+echo   Synch is now running! 
+echo   - Frontend: http://localhost:3000
+echo   - Backend API: http://localhost:8001
+echo ============================================================
+echo.
+echo You can close this window.
+timeout /t 5 >nul
+exit

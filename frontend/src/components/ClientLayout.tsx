@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, settings } = useAuth();
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -31,7 +31,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F2F2F7] dark:bg-[#000000]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F2F2F7] dark:bg-[#0A0A0F]">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -41,14 +41,20 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     );
   }
 
+  const bgClass = settings.theme === 'deep' 
+    ? 'bg-[#0A0A0F]' 
+    : settings.darkMode 
+      ? 'bg-[#000000]' 
+      : 'bg-[#F2F2F7]';
+
   return (
-    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] selection:bg-blue-500/30">
+    <div className={`min-h-screen ${bgClass} selection:bg-blue-500/30 deep-dark:${settings.theme === 'deep' ? 'deep-dark' : ''}`}>
       <AnimatePresence mode="wait">
         {user && <Header />}
       </AnimatePresence>
       
       <main 
-        className={`transition-all duration-500 ease-in-out ${
+        className={`transition-all duration-300 ease-in-out ${
           user 
             ? isMobile ? "pb-20 pt-4 px-4" : "pl-20 min-h-screen" 
             : ""
@@ -59,11 +65,13 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </div>
       </main>
       
-      {/* Global Background Elements */}
-      <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[120px]" />
-      </div>
+      {/* Simplified Background - only when mesh is enabled */}
+      {settings.meshGradient && (
+        <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-60" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-60" />
+        </div>
+      )}
     </div>
   );
 }

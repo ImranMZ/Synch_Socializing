@@ -5,10 +5,21 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles, Heart, Users, Target, ArrowRight, ChevronRight, Star, Zap, MapPin, Activity } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import ParticleField from "@/components/ParticleField";
 
 export default function HomePage() {
   const router = useRouter();
+  const { settings } = useAuth();
   const [stats, setStats] = useState<any>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     api.getStats()
@@ -45,26 +56,31 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-dots opacity-30" />
-      <div className="absolute inset-0 bg-gradient-mesh opacity-50" />
+      <ParticleField />
       
-      {/* Floating orbs */}
-      <motion.div
-        animate={{ x: [0, 50, 0], y: [0, -30, 0] }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute top-20 left-10 w-60 h-60 bg-blue-500/10 rounded-full blur-[100px]"
-      />
-      <motion.div
-        animate={{ x: [0, -40, 0], y: [0, 40, 0] }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="absolute bottom-20 right-10 w-80 h-80 bg-pink-500/10 rounded-full blur-[120px]"
-      />
-      <motion.div
-        animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-1/2 right-1/3 w-40 h-40 bg-purple-500/10 rounded-full blur-[80px]"
-      />
+      {/* Background - only when mesh enabled */}
+      {settings.meshGradient && (
+        <>
+          <div className="absolute inset-0 bg-dots opacity-30" />
+          <div className="absolute inset-0 bg-gradient-mesh opacity-50" />
+        </>
+      )}
+      
+      {/* Floating orbs - Desktop only, mesh enabled only */}
+      {!isMobile && settings.meshGradient && (
+        <>
+          <motion.div
+            animate={{ x: [0, 50, 0], y: [0, -30, 0] }}
+            transition={{ duration: 8, repeat: Infinity }}
+            className="absolute top-20 left-10 w-60 h-60 bg-blue-500/10 rounded-full blur-[60px]"
+          />
+          <motion.div
+            animate={{ x: [0, -40, 0], y: [0, 40, 0] }}
+            transition={{ duration: 10, repeat: Infinity }}
+            className="absolute bottom-20 right-10 w-80 h-80 bg-pink-500/10 rounded-full blur-[60px]"
+          />
+        </>
+      )}
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
         {/* Hero Section */}

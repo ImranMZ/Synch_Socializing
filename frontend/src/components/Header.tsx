@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { Home, User, Settings, LogOut, Sparkles, Sun, Moon, Compass, History, Bell } from "lucide-react";
+import { Home, User, Settings, LogOut, Sparkles, Sun, Moon, Compass, History, Bell, Menu, X, Grid } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { getAvatarUrl } from "@/lib/utils";
@@ -13,6 +13,7 @@ export default function Header() {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [orbOpen, setOrbOpen] = useState(false);
   
   const { scrollY } = useScroll();
   const headerBgOpacity = useTransform(scrollY, [0, 100], [0.5, 0.9]);
@@ -51,40 +52,101 @@ export default function Header() {
     { path: "/settings", icon: Settings, label: "Settings" },
   ];
 
-  // Mobile Bottom Nav
+  // Mobile Navigation Orb
   if (isMobile) {
     return (
-      <header className="fixed bottom-0 left-0 right-0 h-16 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 z-50 flex items-center justify-around px-2 pb-safe">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <motion.button
-              key={item.path}
-              onClick={() => router.push(item.path)}
-              whileTap={{ scale: 0.9 }}
-              className={`relative p-2 flex flex-col items-center justify-center ${
-                isActive(item.path) ? "text-blue-500" : "text-[#8E8E93]"
-              }`}
-            >
-              <Icon className="w-6 h-6" />
-              {item.badge > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-                  {item.badge}
-                </span>
-              )}
-            </motion.button>
-          );
-        })}
+      <>
+        {/* Floating Orb Button */}
         <motion.button
-          onClick={() => router.push("/profile")}
+          onClick={() => setOrbOpen(!orbOpen)}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.9 }}
-          className={`w-8 h-8 rounded-full overflow-hidden border-2 ${
-            isActive("/profile") ? "border-blue-500" : "border-transparent"
-          }`}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg shadow-purple-500/30 flex items-center justify-center z-50"
         >
-          <img src={getAvatarUrl(user.name)} alt={user.name} className="w-full h-full object-cover" />
+          {orbOpen ? <X className="w-6 h-6 text-white" /> : <Grid className="w-6 h-6 text-white" />}
         </motion.button>
-      </header>
+
+        {/* Radial Menu when open */}
+        <AnimatePresence>
+          {orbOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40"
+              onClick={() => setOrbOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="fixed bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3"
+              >
+                {navItems.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.button
+                      key={item.path}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0, delay: index * 0.05 }}
+                      onClick={() => {
+                        router.push(item.path);
+                        setOrbOpen(false);
+                      }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`relative p-3 rounded-full glass-tactile ${
+                        isActive(item.path) ? "text-blue-500" : "text-gray-600 dark:text-gray-300"
+                      }`}
+                    >
+                      <Icon className="w-6 h-6" />
+                      {item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                          {item.badge}
+                        </span>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mini bottom bar */}
+        <header className="fixed bottom-0 left-0 right-0 h-12 bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-md border-t border-black/5 dark:border-white/10 z-30 flex items-center justify-around px-4">
+          <motion.button
+            onClick={() => router.push("/")}
+            whileTap={{ scale: 0.9 }}
+            className={`${isActive("/") ? "text-blue-500" : "text-gray-400"}`}
+          >
+            <Home className="w-5 h-5" />
+          </motion.button>
+          <motion.button
+            onClick={() => router.push("/discover")}
+            whileTap={{ scale: 0.9 }}
+            className={`${isActive("/discover") ? "text-blue-500" : "text-gray-400"}`}
+          >
+            <Compass className="w-5 h-5" />
+          </motion.button>
+          {/* Empty space for orb */}
+          <div className="w-14" />
+          <motion.button
+            onClick={() => router.push("/history")}
+            whileTap={{ scale: 0.9 }}
+            className={`${isActive("/history") ? "text-blue-500" : "text-gray-400"}`}
+          >
+            <History className="w-5 h-5" />
+          </motion.button>
+          <motion.button
+            onClick={() => router.push("/settings")}
+            whileTap={{ scale: 0.9 }}
+            className={`${isActive("/settings") ? "text-blue-500" : "text-gray-400"}`}
+          >
+            <Settings className="w-5 h-5" />
+          </motion.button>
+        </header>
+      </>
     );
   }
 

@@ -13,8 +13,8 @@ class GroqClient:
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
-            print("⚠️  WARNING: GROQ_API_KEY not set. AI features will be disabled.")
-            print("   Set GROQ_API_KEY in backend/.env file or environment variable.")
+            print("[!] WARNING: GROQ_API_KEY not set. AI features will be disabled.")
+            print("    Set GROQ_API_KEY in backend/.env file or environment variable.")
             self.client = None
         else:
             self.client = AsyncGroq(api_key=api_key)
@@ -85,7 +85,10 @@ async def generate_ai_response(
     if not groq_client.is_available():
         return "AI features are disabled. Please set GROQ_API_KEY in backend/.env file to enable AI features."
         
-    # Enforce concise AI responses globally
-    concise_prompt = system_prompt + "\n\nCRITICAL INSTRUCTION: Keep your response extremely concise, direct, and short. Limit your response to 2-3 sentences maximum."
+    # Enforce conciseness only if not already specified in the prompt
+    if "Limit your response" not in system_prompt and "sentences maximum" not in system_prompt:
+        concise_prompt = system_prompt + "\n\nCRITICAL INSTRUCTION: Keep your response concise and direct. Avoid unnecessary filler."
+    else:
+        concise_prompt = system_prompt
     
     return await groq_client.chat(concise_prompt, user_message, temperature, max_tokens)

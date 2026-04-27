@@ -1,6 +1,36 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==================== SYNCH DESIGN SYSTEM ==================== */
+:root {
+  /* Base colors */
+  --synch-base: #F2F2F7;
+  --synch-base-dark: #000000;
+  --synch-deep: #0A0A0F;
+  
+  /* Brand colors */
+  --synch-purple: #8B5CF6;
+  --synch-cyan: #06B6D4;
+  --synch-pink: #EC4899;
+  --synch-blue: #3B82F6;
+  
+  /* Mesh gradient - DISABLED by default for performance */
+  --synch-mesh-opacity: 0;
+  
+  /* Glass effect */
+  --synch-glass-blur: 8px;
+}
+
+/* Deep Dark Theme Mode */
+.deep-dark {
+  --synch-base: var(--synch-deep);
+}
+
+/* Mesh gradient enabled state */
+.mesh-active {
+  --synch-mesh-opacity: 1;
+}
+
 @layer base {
   html {
     font-size: 16px;
@@ -157,17 +187,32 @@ html {
   animation: slide-in-right 0.5s ease-out forwards;
 }
 
-/* Glass morphism */
+/* Glass morphism - OPTIMIZED (reduced blur for performance) */
 .glass {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .glass-dark {
   background: rgba(28, 28, 30, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Glass Tactile (new premium glass effect) */
+.glass-tactile {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-tactile-dark {
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Gradient text */
@@ -340,4 +385,159 @@ html {
 
 .interactive-scale:active {
   transform: scale(0.95);
+}
+
+/* ==================== NEW SYNCH UTILITIES ==================== */
+
+/* Pulsating glow for match cards */
+@keyframes pulse-sync {
+  0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.6); }
+}
+
+.pulse-sync {
+  animation: pulse-sync 2s ease-in-out infinite;
+}
+
+.pulse-sync-high {
+  animation: pulse-sync 1.5s ease-in-out infinite;
+}
+
+/* Skeleton shimmer - optimized (smaller movement) */
+@keyframes shimmer-fast {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, 
+    rgba(128, 128, 128, 0.1) 0%, 
+    rgba(128, 128, 128, 0.2) 50%, 
+    rgba(128, 128, 128, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-fast 1.5s infinite;
+  border-radius: inherit;
+}
+
+/* Liquid transition */
+.liquid-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Magnetic snap effect */
+.magnetic {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.magnetic:hover {
+  transform: scale(1.02);
+}
+
+.magnetic:active {
+  transform: scale(0.98);
+}
+
+/* Navigation orb */
+.nav-orb {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-orb:active {
+  transform: scale(0.9);
+}
+
+/* Deep dark mode specific */
+.deep-dark .glass,
+.deep-dark .glass-dark {
+  background: rgba(10, 10, 15, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Deep dark - reduced background elements */
+.deep-dark .bg-dots {
+  background-image: radial-gradient(rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+}
+
+.deep-dark .bg-gradient-mesh {
+  background: 
+    radial-gradient(at 40% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 80%, rgba(236, 72, 153, 0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+  opacity: var(--synch-mesh-opacity);
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* Responsive padding */
+.p-safe {
+  padding-left: env(safe-area-inset-left, 16px);
+  padding-right: env(safe-area-inset-right, 16px);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* ==================== VIBE GRADIENTS ==================== */
+.vibe-techie {
+  background: linear-gradient(135deg, #06B6D4, #3B82F6, #8B5CF6);
+}
+
+.vibe-artist {
+  background: linear-gradient(135deg, #EC4899, #8B5CF6, #EF4444);
+}
+
+.vibe-gamer {
+  background: linear-gradient(135deg, #10B981, #06B6D4, #3B82F6);
+}
+
+.vibe-foodie {
+  background: linear-gradient(135deg, #F59E0B, #EF4444, #F97316);
+}
+
+.vibe-gymbro {
+  background: linear-gradient(135deg, #EF4444, #F97316, #F59E0B);
+}
+
+.vibe-traveler {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
+}
+
+.vibe-bookworm {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #A855F7);
+}
+
+.vibe-entrepreneur {
+  background: linear-gradient(135deg, #14B8A6, #10B981, #22C55E);
+}
+
+/* Animated shimmer for vibe cards */
+@keyframes shimmer-vibe {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.vibe-shimmer {
+  background-size: 200% auto;
+  animation: shimmer-vibe 3s linear infinite;
+}
+
+/* Glass with colored tint */
+.glass-tint-purple {
+  background: rgba(139, 92, 246, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.glass-tint-pink {
+  background: rgba(236, 72, 153, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.glass-tint-cyan {
+  background: rgba(6, 182, 212, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
 }

@@ -15,11 +15,15 @@ export interface User {
   city?: string;
 }
 
+export type ThemeMode = 'light' | 'dark' | 'deep';
+
 export interface AppSettings {
   darkMode: boolean;
   notifications: boolean;
   ageRangeMin?: number;
   ageRangeMax?: number;
+  theme: ThemeMode;
+  meshGradient: boolean;
 }
 
 const USER_KEY = "synch_user";
@@ -53,6 +57,19 @@ export function createUser(name: string, gender?: string, age?: number, city?: s
 export function saveUser(user: User): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
   localStorage.setItem(SESSION_KEY, "true");
+}
+
+export function saveProfile(profile: { name: string; gender: string; age: number; city: string; vibe: string; avatarStyle: string }): void {
+  const user: User = {
+    name: profile.name,
+    avatar: `https://api.dicebear.com/9.x/${profile.avatarStyle}/svg?seed=${profile.name.replace(/\s+/g, "")}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
+    createdAt: new Date().toISOString(),
+    gender: profile.gender,
+    age: profile.age,
+    city: profile.city,
+    vibe: profile.vibe,
+  };
+  saveUser(user);
 }
 
 export function clearSession(): void {
@@ -153,6 +170,8 @@ const defaultSettings: AppSettings = {
   notifications: true,
   ageRangeMin: 18,
   ageRangeMax: 35,
+  theme: 'dark',
+  meshGradient: false,
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -186,8 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = (name: string, gender?: string, age?: number, city?: string) => {
+  const login = (name: string, gender?: string, age?: number, city?: string, vibe?: string, avatarStyle?: string) => {
     const newUser = createUser(name, gender, age, city);
+    if (vibe) newUser.vibe = vibe;
+    if (avatarStyle) {
+      newUser.avatar = `https://api.dicebear.com/9.x/${avatarStyle}/svg?seed=${name.replace(/\s+/g, "")}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+    }
     saveUser(newUser);
     setUser(newUser);
   };
@@ -210,12 +233,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     saveSettings(newSettings);
     setSettings(newSettings);
     
-    // Apply dark mode immediately
-    if (updates.darkMode !== undefined) {
-      if (updates.darkMode) {
-        document.documentElement.classList.add("dark");
+    // Apply theme modes
+    if (updates.theme !== undefined || updates.darkMode !== undefined) {
+      const theme = updates.theme ?? settings.theme;
+      document.documentElement.classList.remove('dark', 'deep-dark');
+      
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (theme === 'deep') {
+        document.documentElement.classList.add('deep-dark');
+      }
+    }
+    
+    // Apply mesh gradient
+    if (updates.meshGradient !== undefined) {
+      if (updates.meshGradient) {
+        document.documentElement.classList.add('mesh-active');
       } else {
-        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.remove('mesh-active');
       }
     }
   };

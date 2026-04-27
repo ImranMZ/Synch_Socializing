@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ArrowRight, Sparkles, MapPin, Calendar, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { getAvatarUrl } from "@/lib/utils";
+import { getAvatarUrl, isValidName, isValidAge } from "@/lib/utils";
 
 export default function LoginPage() {
   const [name, setName] = useState("");
@@ -13,12 +13,25 @@ export default function LoginPage() {
   const [age, setAge] = useState("");
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    setError("");
+    
+    // Input validation
+    if (!name.trim() || name.trim().length < 2) {
+      setError("Name must be at least 2 characters");
+      return;
+    }
+    
+    if (age && (parseInt(age) < 18 || parseInt(age) > 99)) {
+      setError("Age must be between 18 and 99");
+      return;
+    }
+    
     setLoading(true);
     login(name.trim(), gender, age ? parseInt(age) : undefined, city.trim());
     router.push("/");
@@ -36,11 +49,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white flex flex-col items-center justify-center p-6 font-sans overflow-hidden relative">
+    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#0A0A0F] text-black dark:text-white flex flex-col items-center justify-center p-6 font-sans overflow-hidden relative">
       
-      {/* Abstract Background Blurs for Apple aesthetic */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
+      {/* Simplified Background */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-40 pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-40 pointer-events-none" />
 
       <motion.div
         variants={pageVariants}
@@ -159,6 +172,16 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+            
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-500 text-sm text-center mt-2"
+              >
+                {error}
+              </motion.p>
+            )}
           </form>
 
           <div className="mt-8 text-center">
