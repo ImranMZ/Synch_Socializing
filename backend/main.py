@@ -185,10 +185,26 @@ async def get_chat_personas():
     personas = get_mock_personas(5)
     return personas
 
+@app.post("/api/chat/initial")
+async def get_initial_messages(request: dict):
+    """Get initial intro messages from first 2 personas"""
+    from services.chat import get_mock_personas, get_initial_messages
+    
+    try:
+        personas = request.get("personas", [])
+        if not personas or len(personas) == 0:
+            personas = get_mock_personas(5)
+        
+        messages = get_initial_messages(personas)
+        return {"messages": messages, "personas": personas, "success": True}
+    except Exception as e:
+        print(f"Initial messages error: {e}")
+        return {"messages": [], "personas": [], "success": False, "error": str(e)}
+
 @app.post("/api/chat/simulate")
 async def simulate_chat_round(request: dict):
-    from services.chat import generate_chat_round
-    from services.chat import get_mock_personas
+    """Get ONE response from the persona whose turn it is"""
+    from services.chat import get_mock_personas, generate_chat_round
     
     try:
         personas = request.get("personas", [])
@@ -198,6 +214,7 @@ async def simulate_chat_round(request: dict):
         chat_history = request.get("history", [])
         user_participating = request.get("user_participating", False)
         user_message = request.get("user_message", "")
+        turn_index = request.get("turn_index", 0)
         
         if user_message:
             chat_history.append({
@@ -206,11 +223,21 @@ async def simulate_chat_round(request: dict):
                 "message": user_message
             })
         
-        messages = await generate_chat_round(personas, chat_history, user_participating)
-        return {"messages": messages, "personas": personas, "success": True}
+        # Generate ONE message for the current turn
+        messages = generate_chat_round(personas, chat_history, user_participating, turn_index)
+        
+        # Calculate next turn index
+        next_turn = (turn_index + 1) % len(personas)
+        
+        return {
+            "messages": messages, 
+            "personas": personas, 
+            "success": True,
+            "next_turn": next_turn
+        }
     except Exception as e:
         print(f"Chat simulate error: {e}")
-        return {"messages": [], "personas": get_mock_personas(5), "success": False, "error": str(e)}
+        return {"messages": [], "personas": [], "success": False, "error": str(e)}
 
 @app.post("/api/chat/direct")
 async def direct_chat(request: dict):

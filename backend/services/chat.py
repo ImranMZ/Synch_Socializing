@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
 import random
-import os
+import json
 
 UNIVERSITIES = [
     {"code": "LU", "name": "Lahore University", "city": "Lahore"},
@@ -19,133 +19,234 @@ UNIVERSITIES = [
 VIBES = ["GymBro", "Gamer", "Techie", "Artist", "Foodie", "Traveler", "Bookworm", "Fashionista", "Entrepreneur"]
 PERSONALITIES = ["Chill", "Enthusiastic", "Witty", "Supportive", "Curious", "Direct"]
 
+# Pre-defined personas with rich profiles
 MOCK_PERSONAS = [
-    {"Name": "Ahmed Khan", "Vibe": "Techie", "University": "NUST", "UniversityName": "NUST", "City": "Islamabad", "Hobbies": "Coding, Gaming", "personality": "Chill"},
-    {"Name": "Fatima Ali", "Vibe": "Bookworm", "University": "LU", "UniversityName": "Lahore University", "City": "Lahore", "Hobbies": "Reading, Writing", "personality": "Supportive"},
-    {"Name": "Hassan Raza", "Vibe": "GymBro", "University": "PU", "UniversityName": "Punjab University", "City": "Lahore", "Hobbies": "Sports, Fitness", "personality": "Enthusiastic"},
-    {"Name": "Ayesha Malik", "Vibe": "Foodie", "University": "UOK", "UniversityName": "University of Karachi", "City": "Karachi", "Hobbies": "Cooking, Travel", "personality": "Witty"},
-    {"Name": "Ali Hassan", "Vibe": "Gamer", "University": "FAST", "UniversityName": "FAST-NU", "City": "Lahore", "Hobbies": "Gaming, Anime", "personality": "Curious"},
+    {
+        "Name": "Ahmed Khan", "Vibe": "Techie", "University": "NUST", "UniversityName": "NUST", 
+        "City": "Islamabad", "Hobbies": "Coding, Gaming", "personality": "Chill",
+        "intro": "Hey everyone! Just finished a coding marathon. Anyone else working on side projects?"
+    },
+    {
+        "Name": "Fatima Ali", "Vibe": "Bookworm", "University": "LU", "UniversityName": "Lahore University", 
+        "City": "Lahore", "Hobbies": "Reading, Writing", "personality": "Supportive",
+        "intro": "Hi guys! Just finished 'Atomic Habits' - absolutely loved it. Anyone else a book lover?"
+    },
+    {
+        "Name": "Hassan Raza", "Vibe": "GymBro", "University": "PU", "UniversityName": "Punjab University", 
+        "City": "Lahore", "Hobbies": "Sports, Fitness", "personality": "Enthusiastic",
+        "intro": "What's up everyone! 💪 Just crushed leg day. Who's hitting the gym this evening?"
+    },
+    {
+        "Name": "Ayesha Malik", "Vibe": "Foodie", "University": "UOK", "UniversityName": "University of Karachi", 
+        "City": "Karachi", "Hobbies": "Cooking, Travel", "personality": "Witty",
+        "intro": "Hey! Just discovered this amazing biryani place near campus. Foodies unite! 🍛"
+    },
+    {
+        "Name": "Ali Hassan", "Vibe": "Gamer", "University": "FAST", "UniversityName": "FAST-NU", 
+        "City": "Lahore", "Hobbies": "Gaming, Anime", "personality": "Curious",
+        "intro": "GG! Just hit Diamond in Valorant. Anyone up for some gaming tonight? 🎮"
+    },
 ]
 
-FALLBACK_MESSAGES = [
-    "Hey everyone! How's it going?",
-    "Just finished my midterm exams, so relieved!",
-    "Anyone up for a coffee later?",
-    "The new cafe near campus is amazing!",
-    "Anyone going to the tech meetup next week?",
-    "Studying for finals is killing me 😩",
-    "Just discovered this amazing new series on Netflix!",
-    "The weather is perfect today for a walk",
-    "Who's coming to the game night this Friday?",
-    "Can someone help me with this coding problem?",
-]
-
-PERSONA_RESPONSES = {
-    "Techie": [
-        "Just pushed my latest project to GitHub!",
-        "Anyone interested in a hackathon this weekend?",
-        "Python > JavaScript, fight me",
-        "The AI hype is real this semester",
-        "Finally fixed that bug that's been haunting me for days!",
+# Context-aware response templates based on conversation topics
+TOPIC_RESPONSES = {
+    "coding": [
+        "Speaking of coding, I just learned a new Python trick! Want to hear it?",
+        "Oh I feel you on the debugging struggle! Took me 3 hours to find a missing semicolon 😅",
+        "That reminds me - anyone going to the hackathon next month?",
     ],
-    "Bookworm": [
-        "Currently reading 'Atomic Habits' - highly recommend!",
-        "The library is my second home these days",
-        "Book club meeting next Tuesday, who's in?",
-        "Nothing beats a good book on a rainy day",
-        "Just finished the most beautiful story ever",
+    "book": [
+        "That book sounds amazing! Adding it to my reading list 📚",
+        "I just finished a psychological thriller - my mind is still blown!",
+        "Nothing beats a good book on a rainy day, right?",
     ],
-    "GymBro": [
-        "Leg day tomorrow... wish me luck 😅",
-        "Protein shake after every workout is the way!",
-        "Who's coming to the gym at 6 AM?",
-        "Gains are real this semester!",
-        "Cardio? In this economy?",
+    "gym": [
+        "Gym day was brutal today but worth it! 💪 Gains are coming nicely.",
+        "Wait, what's your workout split? I'm doing PPL and seeing great results!",
+        "Protein shake game is strong today! Who else tracks macros?",
     ],
-    "Foodie": [
-        "The biryani at the new place is *chef's kiss*",
-        "Food hunting this weekend anyone?",
-        "Cooking is my therapy tbh",
-        "Street food > fancy restaurants",
-        "Recipe sharing thread? I'm in!",
+    "food": [
+        "OMG yes! That place is incredible. Their nihari is *chef's kiss* 🤤",
+        "Now I'm craving biryani! Anyone want to do a food crawl this weekend?",
+        "Cooking experiment today: tried making sushi. It... didn't go well 😂",
     ],
-    "Gamer": [
-        "Finally hit Diamond rank! 🎮",
-        "Who's down for some Valorant tonight?",
-        "The new game update is insane",
-        "Gaming marathon this weekend, anyone?",
-        "Controller or keyboard, let's settle this",
+    "gaming": [
+        "That game is insane! Just finished the new update, the graphics are 🔥",
+        "I'm more of a cozy gamer personally, but respect the grind! 🎮",
+        "Gaming marathon this weekend? I'm down if anyone wants to join!",
+    ],
+    "general": [
+        "That's so interesting! Tell me more about that.",
+        "Ha! That reminds me of something that happened to me last week.",
+        "Love the energy! Keep going, I'm here for it 😄",
+        "Wait really? I didn't know that about you!",
+        "That's actually a really good point. Never thought of it that way.",
     ],
 }
 
 def get_mock_personas(count: int = 5) -> List[Dict[str, Any]]:
-    return random.sample(MOCK_PERSONAS, min(count, len(MOCK_PERSONAS)))
+    """Return exactly 5 personas for consistent chat"""
+    return [dict(p) for p in MOCK_PERSONAS[:count]]
 
-def generate_local_response(persona: Dict[str, Any], chat_context: str) -> str:
+def detect_topic(message: str) -> str:
+    """Detect what topic a message is about"""
+    message_lower = message.lower()
+    
+    if any(word in message_lower for word in ["code", "python", "debug", "programming", "github", "api"]):
+        return "coding"
+    elif any(word in message_lower for word in ["book", "read", "library", "novel", "author"]):
+        return "book"
+    elif any(word in message_lower for word in ["gym", "workout", "fitness", "protein", "leg day", "gains"]):
+        return "gym"
+    elif any(word in message_lower for word in ["food", "biryani", "cook", "restaurant", "eat", "nihari"]):
+        return "food"
+    elif any(word in message_lower for word in ["game", "gaming", "valorant", "rank", "play"]):
+        return "gaming"
+    else:
+        return "general"
+
+def get_persona_response(persona: Dict[str, Any], chat_history: List[Dict[str, Any]], turn_context: str) -> str:
+    """
+    Generate a contextual response based on:
+    1. Who this persona is (vibe, personality, university)
+    2. What was just said in chat (turn_context)
+    3. The topic being discussed
+    """
     vibe = persona.get("Vibe", "Techie")
+    name = persona.get("Name", "Someone")
+    university = persona.get("UniversityName", "a university")
     personality = persona.get("personality", "Chill")
     
-    if vibe in PERSONA_RESPONSES:
-        return random.choice(PERSONA_RESPONSES[vibe])
+    # Detect topic from the turn context
+    topic = detect_topic(turn_context)
     
-    vibe_specific = [
-        ("Techie", ["Just debugging some code, brain is fried 😅", "The new framework is actually pretty cool", "Who's working on side projects?"]),
-        ("Bookworm", ["Currently obsessed with this book series!", "The library is packed these days", "Anyone else love reading more than sleeping?"]),
-        ("GymBro", ["Leg day was brutal today! 💪", "Gym at 5 AM hits different", "Gains coming in nicely this semester"]),
-        ("Foodie", ["The food here is amazing!", "Anyone tried that new restaurant?", "Cooked something awesome today!" ]),
-        ("Gamer", ["GG easy!", "Anyone up for gaming later?", "That game was insane!" ]),
-        ("Artist", ["Just finished a new piece!", "Art block is real these days", "Museum trip this weekend?"]),
-        ("Traveler", ["Planning my next trip already!", "The views here are gorgeous", "Anyone wanna explore this weekend?"]),
-        ("Fashionista", [" outfit of the day is fire!", "Thrift shopping finds were amazing!", "Style inspo thread?"]),
-        ("Entrepreneur", ["Working on a new idea!", "Side hustle grind never stops", "Who's into startups?"]),
-    ]
+    # Get vibe-appropriate response
+    if vibe == "Techie" and topic == "coding":
+        responses = [
+            "As a CS major at {uni}, I can confirm debugging is 90% of the job 😅",
+            "Oh that's nothing! Just spent 5 hours fixing a race condition. CS life, am I right?",
+            "Speaking of which - anyone tried the new framework? Thoughts?",
+        ]
+    elif vibe == "Bookworm" and topic == "book":
+        responses = [
+            "Finally someone who appreciates good literature! What's your favorite genre?",
+            "That book changed my perspective too! Have you read 'The Alchemist'?",
+            "Nothing beats a quiet evening with a good book and chai ☕",
+        ]
+    elif vibe == "GymBro" and topic == "gym":
+        responses = [
+            "YES! That workout split is solid. What's your PR on bench?",
+            "Gym at 6 AM hits different! Consistency is key 💪",
+            "Leg day was BRUTAL today but the pump is real!",
+        ]
+    elif vibe == "Foodie" and topic == "food":
+        responses = [
+            "OMG yes! That place is incredible. We should do a food crawl! 🍕",
+            "You had me at biryani! What's your go-to order?",
+            "Just tried making sushi actually, it... didn't go well 😂",
+        ]
+    elif vibe == "Gamer" and topic == "gaming":
+        responses = [
+            "No way! That game is insane. Just hit Diamond myself 🎮",
+            "Gaming night this Friday? I'm down to squad up!",
+            "Wait till you see the new update, the graphics are 🔥",
+        ]
+    else:
+        # Use topic-based responses
+        responses = TOPIC_RESPONSES.get(topic, TOPIC_RESPONSES["general"])
     
-    for v, responses in vibe_specific:
-        if vibe == v:
-            return random.choice(responses)
+    # Add personality flavor
+    if personality == "Witty":
+        responses = [r + " 😏" if not r.endswith(("!", "?", ".")) else r[:-1] + "! 😏" for r in responses]
+    elif personality == "Enthusiastic":
+        responses = ["Wow! " + r for r in responses]
+    elif personality == "Supportive":
+        responses = [r + " You got this! 💪" if "workout" in r.lower() else r for r in responses]
     
-    return random.choice(FALLBACK_MESSAGES)
+    return random.choice(responses)
 
-def get_random_personas(df=None, count: int = 5) -> List[Dict[str, Any]]:
-    return get_mock_personas(count)
-
-async def generate_chat_round(personas: List[Dict[str, Any]], chat_history: List[Dict[str, Any]], user_participating: bool = False) -> List[Dict[str, Any]]:
+def generate_chat_round(
+    personas: List[Dict[str, Any]], 
+    chat_history: List[Dict[str, Any]], 
+    user_participating: bool = False,
+    turn_index: int = 0
+) -> List[Dict[str, Any]]:
+    """
+    Generate ONE message at a time for realistic conversation.
+    
+    Args:
+        personas: List of persona objects
+        chat_history: Full conversation history
+        user_participating: Whether user has joined
+        turn_index: Which persona's turn it is (0-4)
+    
+    Returns:
+        List with single message from the persona whose turn it is
+    """
     messages = []
     
-    if not user_participating:
-        chat_context = "This is the start of the conversation"
-    else:
-        chat_context = "\n".join([
-            f"{m.get('name', 'Someone')}: {m.get('message', '')}" 
-            for m in chat_history[-5:] if m.get("type") == "user"
-        ])
-        if not chat_context:
-            chat_context = "A new user just joined"
+    if not personas or len(personas) == 0:
+        personas = get_mock_personas(5)
     
-    for i, persona in enumerate(personas):
-        try:
-            response = generate_local_response(persona, chat_context)
-            messages.append({
-                "id": i,
-                "name": persona.get("Name", f"User_{i}"),
-                "university": persona.get("University", ""),
-                "university_name": persona.get("UniversityName", ""),
-                "city": persona.get("City", ""),
-                "vibe": persona.get("Vibe", ""),
-                "message": response,
-                "timestamp": "Just now"
-            })
-        except Exception as e:
-            print(f"Error generating message for persona {i}: {e}")
-            messages.append({
-                "id": i,
-                "name": persona.get("Name", f"User_{i}"),
-                "university": persona.get("University", ""),
-                "university_name": persona.get("UniversityName", ""),
-                "city": persona.get("City", ""),
-                "vibe": persona.get("Vibe", ""),
-                "message": random.choice(FALLBACK_MESSAGES),
-                "timestamp": "Just now"
-            })
+    # Determine whose turn it is
+    persona_to_respond = personas[turn_index % len(personas)]
+    
+    # Build context from recent messages (last 3 messages)
+    recent_messages = chat_history[-3:] if len(chat_history) > 0 else []
+    context = ". ".join([
+        f"{m.get('name', 'Someone')}: {m.get('message', '')}" 
+        for m in recent_messages
+    ])
+    
+    if not context:
+        context = "This is the start of the conversation"
+    
+    try:
+        response = get_persona_response(persona_to_respond, chat_history, context)
+        
+        messages.append({
+            "id": len(chat_history),
+            "name": persona_to_respond["Name"],
+            "university": persona_to_respond.get("University", ""),
+            "university_name": persona_to_respond.get("UniversityName", ""),
+            "city": persona_to_respond.get("City", ""),
+            "vibe": persona_to_respond.get("Vibe", ""),
+            "message": response,
+            "timestamp": "Just now",
+            "turn_index": (turn_index % len(personas))
+        })
+    except Exception as e:
+        print(f"Error generating message for persona {turn_index}: {e}")
+        messages.append({
+            "id": len(chat_history),
+            "name": persona_to_respond["Name"],
+            "university": persona_to_respond.get("University", ""),
+            "university_name": persona_to_respond.get("UniversityName", ""),
+            "city": persona_to_respond.get("City", ""),
+            "vibe": persona_to_respond.get("Vibe", ""),
+            "message": random.choice(TOPIC_RESPONSES["general"]),
+            "timestamp": "Just now",
+            "turn_index": (turn_index % len(personas))
+        })
+    
+    return messages
+
+def get_initial_messages(personas: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Get initial intro messages from 2-3 personas to start the chat"""
+    messages = []
+    
+    # First 2 personas introduce themselves
+    for i, persona in enumerate(personas[:2]):
+        messages.append({
+            "id": i,
+            "name": persona["Name"],
+            "university": persona.get("University", ""),
+            "university_name": persona.get("UniversityName", ""),
+            "city": persona.get("City", ""),
+            "vibe": persona.get("Vibe", ""),
+            "message": persona.get("intro", "Hey everyone!"),
+            "timestamp": "Just now",
+            "turn_index": i
+        })
     
     return messages

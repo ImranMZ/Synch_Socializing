@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { ArrowLeft, RefreshCw, Send, Users, GraduationCap, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, RefreshCw, Send, MessageCircle, Sparkles, Users } from "lucide-react";
 
 interface Message {
   id: number;
@@ -15,6 +15,7 @@ interface Message {
   message: string;
   timestamp: string;
   isUser?: boolean;
+  turn_index?: number;
 }
 
 interface Persona {
@@ -48,7 +49,8 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [userMessage, setUserMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [typingPersona, setTypingPersona] = useState<Persona | null>(null);
+  const [turnIndex, setTurnIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,45 +67,43 @@ export default function ChatPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8001/api/chat/simulate", {
+      // First, get personas
+      const personaRes = await fetch("http://localhost:8001/api/chat/personas", {
+        method: "POST"
+      });
+      
+      if (!personaRes.ok) {
+        throw new Error(`Server error: ${personaRes.status}`);
+      }
+      
+      const personaData = await personaRes.json();
+      setPersonas(personaData || []);
+
+      // Then, get initial messages (first 2 personas introducing themselves)
+      const initialRes = await fetch("http://localhost:8001/api/chat/initial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          personas: [],
-          history: [],
-          user_participating: false,
-          user_message: ""
+          personas: personaData
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+      if (!initialRes.ok) {
+        throw new Error(`Server error: ${initialRes.status}`);
       }
 
-      const chatData = await response.json();
-      setPersonas(chatData.personas || []);
-      
-      const newMessages = (chatData.messages || []).map((msg: any, idx: number) => ({
+      const initialData = await initialRes.json();
+      const newMessages = (initialData.messages || []).map((msg: any, idx: number) => ({
         ...msg,
         id: idx,
         isUser: false
       }));
+      
       setMessages(newMessages);
+      setTurnIndex(newMessages.length);
     } catch (e: any) {
       console.error("Chat load error:", e);
       setError(e.message || "Failed to load chat. Tap refresh to retry.");
-      
-      const mockMessages: Message[] = [
-        { id: 0, name: "Ahmed Khan", university: "NUST", university_name: "NUST", city: "Islamabad", vibe: "Techie", message: "Hey everyone! How's it going?", timestamp: "Just now", isUser: false },
-        { id: 1, name: "Fatima Ali", university: "LU", university_name: "Lahore University", city: "Lahore", vibe: "Bookworm", message: "Just finished my midterm exams, so relieved!", timestamp: "Just now", isUser: false },
-        { id: 2, name: "Hassan Raza", university: "PU", university_name: "Punjab University", city: "Lahore", vibe: "GymBro", message: "Anyone up for coffee later?", timestamp: "Just now", isUser: false },
-      ];
-      setMessages(mockMessages);
-      setPersonas([
-        { Name: "Ahmed Khan", Vibe: "Techie", University: "NUST", UniversityName: "NUST", City: "Islamabad" },
-        { Name: "Fatima Ali", Vibe: "Bookworm", University: "LU", UniversityName: "Lahore University", City: "Lahore" },
-        { Name: "Hassan Raza", Vibe: "GymBro", University: "PU", UniversityName: "Punjab University", City: "Lahore" },
-      ]);
     }
     setLoading(false);
   };
@@ -114,11 +114,15 @@ export default function ChatPage() {
     }
   }, [user]);
 
+  const getNextPersona = (): Persona | null => {
+    if (personas.length === 0) return null;
+    return personas[turnIndex % personas.length];
+  };
+
   const handleSendMessage = async () => {
     if (!userMessage.trim() || sending) return;
     
     setSending(true);
-    setIsTyping(true);
     
     const userMsg = userMessage.trim();
     const userMsgObj: Message = {
@@ -137,14 +141,27 @@ export default function ChatPage() {
     setMessages(prev => [...prev, userMsgObj]);
 
     try {
+      const nextPersona = getNextPersona();
+      if (!nextPersona) throw new Error("No personas available");
+      
+      setTypingPersona(nextPersona);
+
+      // Show typing for 1-2 seconds
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+
       const response = await fetch("http://localhost:8001/api/chat/simulate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           personas: personas,
-          history: messages.map(m => ({ type: m.isUser ? "user" : "persona", name: m.name, message: m.message })),
+          history: messages.map(m => ({ 
+            name: m.name, 
+            message: m.message,
+            role: m.isUser ? "user" : "persona"
+          })),
           user_participating: true,
-          user_message: userMsg
+          user_message: userMsg,
+          turn_index: turnIndex % personas.length
         })
       });
 
@@ -160,27 +177,32 @@ export default function ChatPage() {
       }));
       
       setMessages(prev => [...prev, ...newMessages]);
+      setTurnIndex(prev => prev + 1);
     } catch (e: any) {
       console.error("Send message error:", e);
+      const fallbackPersona = getNextPersona();
       const fallbackMsg: Message = {
         id: messages.length + 1,
-        name: "AI Bot",
-        university: "NUST",
-        university_name: "NUST",
-        city: "Islamabad",
-        vibe: "Techie",
-        message: "Thanks for the message! The community is active. Check back soon for responses.",
+        name: fallbackPersona?.Name || "AI Bot",
+        university: fallbackPersona?.University || "NUST",
+        university_name: fallbackPersona?.UniversityName || "NUST",
+        city: fallbackPersona?.City || "Islamabad",
+        vibe: fallbackPersona?.Vibe || "Techie",
+        message: "That's interesting! Tell me more about that.",
         timestamp: "Just now",
         isUser: false
       };
       setMessages(prev => [...prev, fallbackMsg]);
+      setTurnIndex(prev => prev + 1);
     }
     
     setSending(false);
-    setIsTyping(false);
+    setTypingPersona(null);
   };
 
   const handleRefresh = () => {
+    setMessages([]);
+    setTurnIndex(0);
     loadInitialChat();
   };
 
@@ -190,6 +212,21 @@ export default function ChatPage() {
 
   const getVibeColor = (vibe: string) => {
     return VIBE_COLORS[vibe] || "bg-gray-500/20 text-gray-600";
+  };
+
+  const getAvatarColor = (vibe: string) => {
+    switch(vibe) {
+      case "Techie": return "bg-cyan-500";
+      case "Gamer": return "bg-purple-500";
+      case "GymBro": return "bg-red-500";
+      case "Bookworm": return "bg-amber-500";
+      case "Foodie": return "bg-orange-500";
+      case "Artist": return "bg-pink-500";
+      case "Traveler": return "bg-green-500";
+      case "Fashionista": return "bg-violet-500";
+      case "Entrepreneur": return "bg-blue-500";
+      default: return "bg-gray-500";
+    }
   };
 
   if (authLoading || !user) {
@@ -237,9 +274,13 @@ export default function ChatPage() {
               personas.map((p, i) => (
                 <div 
                   key={i} 
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-white/5 rounded-full whitespace-nowrap border border-black/5 dark:border-white/10"
+                  className={`flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-white/5 rounded-full whitespace-nowrap border ${
+                    typingPersona?.Name === p.Name 
+                      ? "border-blue-500 bg-blue-500/10" 
+                      : "border-black/5 dark:border-white/10"
+                  }`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                  <div className={`w-6 h-6 rounded-full ${getAvatarColor(p.Vibe)} flex items-center justify-center`}>
                     <span className="text-[10px] font-medium text-white">
                       {getInitials(p.Name)}
                     </span>
@@ -248,6 +289,9 @@ export default function ChatPage() {
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${getVibeColor(p.Vibe)}`}>
                     {p.Vibe}
                   </span>
+                  {typingPersona?.Name === p.Name && (
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                  )}
                 </div>
               ))
             )}
@@ -294,28 +338,22 @@ export default function ChatPage() {
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                     msg.isUser 
                       ? "bg-blue-500" 
-                      : msg.vibe === "Techie" ? "bg-cyan-500" :
-                        msg.vibe === "Gamer" ? "bg-purple-500" :
-                        msg.vibe === "GymBro" ? "bg-red-500" :
-                        msg.vibe === "Bookworm" ? "bg-amber-500" :
-                        msg.vibe === "Foodie" ? "bg-orange-500" :
-                        msg.vibe === "Artist" ? "bg-pink-500" :
-                        msg.vibe === "Traveler" ? "bg-green-500" :
-                        msg.vibe === "Fashionista" ? "bg-violet-500" :
-                        msg.vibe === "Entrepreneur" ? "bg-blue-500" :
-                        "bg-gray-500"
+                      : getAvatarColor(msg.vibe)
                   }`}>
                     <span className="text-xs font-medium text-white">
                       {getInitials(msg.name)}
                     </span>
                   </div>
-                  
+                 
                   {/* Message Content */}
                   <div className={`max-w-[75%] ${msg.isUser ? "items-end" : "items-start"} flex flex-col gap-1`}>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium dark:text-white">{msg.name}</span>
                       {msg.university_name && !msg.isUser && (
                         <span className="text-xs text-[#71717A]">• {msg.university_name}</span>
+                      )}
+                      {msg.isUser && (
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600">You</span>
                       )}
                     </div>
                     
@@ -334,10 +372,12 @@ export default function ChatPage() {
               ))}
               
               {/* Typing Indicator */}
-              {isTyping && (
+              {typingPersona && (
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white">...</span>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getAvatarColor(typingPersona.Vibe)}`}>
+                    <span className="text-xs font-medium text-white">
+                      {getInitials(typingPersona.Name)}
+                    </span>
                   </div>
                   <div className="bg-white dark:bg-[#161618] border border-black/5 dark:border-white/8 px-4 py-3 rounded-2xl rounded-bl-md">
                     <div className="flex gap-1">
@@ -356,7 +396,7 @@ export default function ChatPage() {
 
       {/* Message Count */}
       <div className="text-center py-2 text-xs text-[#71717A] border-t border-black/5 dark:border-white/8">
-        💬 {messages.length} messages • Chat active
+        💬 {messages.length} messages • Turn {turnIndex + 1} • Chat active
       </div>
 
       {/* Message Input */}
@@ -368,8 +408,9 @@ export default function ChatPage() {
               value={userMessage}
               onChange={(e) => setUserMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Type a message..."
+              placeholder={typingPersona ? `${typingPersona.Name} is typing...` : "Type a message..."}
               className="flex-1 px-4 py-3 bg-white dark:bg-[#0D0D0F] border border-black/10 dark:border-white/10 rounded-full text-sm focus:outline-none focus:border-blue-500 placeholder:text-[#71717A]"
+              disabled={sending}
             />
             <button
               onClick={handleSendMessage}
