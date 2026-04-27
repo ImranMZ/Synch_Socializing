@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { Home, User, Settings, LogOut, Sparkles, Sun, Moon, Compass, History, Bell, Menu, X, Grid } from "lucide-react";
+import { Home, User, Settings, LogOut, Sparkles, Sun, Moon, Compass, History, Bell, Menu, X, Grid, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { getAvatarUrl } from "@/lib/utils";
@@ -43,6 +43,7 @@ export default function Header() {
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
     { path: "/discover", icon: Compass, label: "Discover" },
+    { path: "/chat", icon: MessageCircle, label: "Chat" },
     { path: "/history", icon: History, label: "History" },
     { path: "/activity", icon: Bell, label: "Activity", badge: unreadCount },
     { path: "/settings", icon: Settings, label: "Settings" },

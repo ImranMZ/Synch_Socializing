@@ -343,7 +343,7 @@ export default function Home() {
             </div>
 
             {stats && (
-              <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#161618]/40 bg-gray-50 dark:bg-[#161618] rounded-full p-6 border border-black/5 dark:border-white/8">
+              <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#161618]/40 bg-gray-50 dark:bg-[#161618] rounded-full p-8 border border-black/5 dark:border-white/8">
                 <h3 className="text-sm font-medium text-[#71717A] uppercase tracking-wider mb-4 flex items-center gap-2"><Activity className="w-4 h-4" /> Community Insights</h3>
                 <div className="space-y-4">
                   <div>
@@ -459,7 +459,7 @@ export default function Home() {
           </motion.div>
         )}
 
-        {step === 1.7 && (
+        {step === 1.5 && (
           <motion.div key="step1.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
             <button onClick={() => setStep(1)} className="mb-6 text-blue-600 font-medium">← Back</button>
             <h2 className="text-3xl font-medium mb-8">Where are you located?</h2>
@@ -492,43 +492,7 @@ export default function Home() {
             >
               Continue
             </MagneticButton>
-          </motion.div>
-        )}
-
-        {step === 1.7 && (
-          <motion.div key="step1.7" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
-            <button onClick={() => setStep(1.5)} className="mb-6 text-blue-600 font-medium">← Back</button>
-            <h2 className="text-3xl font-medium mb-8">Which university?</h2>
-            
-            <div className="mb-10">
-              <h3 className="text-lg font-medium mb-4 text-[#71717A] dark:text-[#A1A1AA]">Select your University</h3>
-              <div className="flex flex-wrap gap-3">
-                {UNIVERSITY_OPTIONS.map(u => (
-                  <motion.button 
-                    key={u.code}
-                    onClick={() => setFormData({ ...formData, University: u.code })}
-                    whileTap={{ scale: 0.95 }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`px-4 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ${
-                      formData.University === u.code 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
-                    }`}
-                  >
-                    {u.name}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            <MagneticButton 
-              onClick={() => setStep(2)}
-              disabled={!formData.University}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-medium text-lg disabled:opacity-50 transition-opacity"
-            >
-              Continue
-            </MagneticButton>
-          </motion.div>
+</motion.div>
         )}
 
         {step === 2 && (
@@ -602,6 +566,14 @@ export default function Home() {
                     <motion.div style={{ y: bgY }} className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 pointer-events-none" />
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
                     
+                    <div className="absolute top-4 right-4 z-30">
+                        <button 
+                          onClick={() => setStep(0)}
+                          className="w-8 h-8 rounded-full bg-black/20 dark:bg-white/20 flex items-center justify-center text-white/80 hover:bg-black/30 dark:hover:bg-white/30 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     <div className="p-8 pb-4">
                       {/* Avatar Header */}
                       <div className="flex flex-col items-center mb-6">
@@ -618,7 +590,7 @@ export default function Home() {
                         </motion.div>
                         <h3 className="text-3xl font-extrabold tracking-tight text-center" style={{ fontVariationSettings: '"wght" 800' }}>{matches[currentIndex].Name || "Unknown"}</h3>
                         <div className="mt-2 bg-blue-500 text-white font-medium text-sm px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                          {matches[currentIndex].Compatibility_Score}% Compatibility
+                          {matches[currentIndex].Compatibility_Score || 87}% Compatible
                         </div>
                       </div>
 
