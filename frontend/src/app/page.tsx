@@ -9,6 +9,7 @@ import VibeQuizModal from "../components/VibeQuizModal";
 import HiddenTruthModal from "../components/HiddenTruthModal";
 import MagneticButton from "../components/MagneticButton";
 import LayeredStackCard from "../components/LayeredStackCard";
+import DirectChatModal from "../components/DirectChatModal";
 import { api, UserProfile, MatchProfile } from "../lib/api";
 import confetti from "canvas-confetti";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
@@ -110,6 +111,9 @@ export default function Home() {
   const [aiModalData, setAiModalData] = useState<any>(null);
   const [aiModalLoading, setAiModalLoading] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
+  const [directChatOpen, setDirectChatOpen] = useState(false);
+  const [directChatMatch, setDirectChatMatch] = useState<any>(null);
+  const [directChatInitialMsg, setDirectChatInitialMsg] = useState("");
   const router = useRouter();
 
   const [whyMatchData, setWhyMatchData] = useState<any>(null);
@@ -732,6 +736,12 @@ export default function Home() {
         type={aiModalType}
         data={aiModalData}
         loading={aiModalLoading}
+        onIcebreakerSelect={(icebreaker: string) => {
+          setAiModalOpen(false);
+          setDirectChatMatch(matches[currentIndex]);
+          setDirectChatInitialMsg(icebreaker);
+          setDirectChatOpen(true);
+        }}
       />
 
       <HiddenTruthModal
@@ -740,6 +750,13 @@ export default function Home() {
         onRegenerate={handleRegenerateTruth}
         data={hiddenTruthData}
         loading={hiddenTruthLoading}
+      />
+
+      <DirectChatModal
+        isOpen={directChatOpen}
+        onClose={() => { setDirectChatOpen(false); setDirectChatMatch(null); setDirectChatInitialMsg(""); }}
+        match={directChatMatch}
+        initialMessage={directChatInitialMsg}
       />
     </div>
   );

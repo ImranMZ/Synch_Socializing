@@ -208,6 +208,16 @@ async def simulate_chat_round(request: dict):
     messages = await generate_chat_round(personas, chat_history, user_participating)
     return {"messages": messages, "personas": personas}
 
+@app.post("/api/chat/direct")
+async def direct_chat(request: dict):
+    from services.direct_chat import generate_direct_chat_response
+    
+    match_data = request.get("match_data", {})
+    chat_history = request.get("chat_history", [])
+    
+    response = await generate_direct_chat_response(match_data, chat_history)
+    return {"response": response}
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='127.0.0.1', port=8001)

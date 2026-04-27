@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { X, Lightbulb, MessageSquare, Sparkles, TrendingUp, FlaskConical, Zap, Heart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Lightbulb, MessageSquare, Sparkles, TrendingUp, FlaskConical, Zap, Heart, Send } from "lucide-react";
 import { useState } from "react";
 import WavelengthChart from "./WavelengthChart";
 
@@ -12,6 +12,7 @@ interface AIInsightModalProps {
   data: any;
   loading?: boolean;
   goal?: string;
+  onIcebreakerSelect?: (icebreaker: string) => void;
 }
 
 const typeConfig = {
@@ -134,37 +135,55 @@ export default function AIInsightModal({ isOpen, onClose, type, data, loading, g
                </div>
              )}
 
-             {type === "icebreakers" && data && (
-               <div className="space-y-4">
-                 {data.curious && (
-                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5">
-                     <div className="flex items-center gap-2 mb-3">
-                       <span className="text-xl">💭</span>
-                       <span className="text-base font-semibold text-blue-600 dark:text-blue-400">Curious</span>
-                     </div>
-                     <p className="text-base">{data.curious}</p>
-                   </div>
-                 )}
-                 {data.funny && (
-                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-5">
-                     <div className="flex items-center gap-2 mb-3">
-                       <span className="text-xl">😂</span>
-                       <span className="text-base font-semibold text-purple-600 dark:text-purple-400">Funny</span>
-                     </div>
-                     <p className="text-base">{data.funny}</p>
-                   </div>
-                 )}
-                 {data.bold && (
-                   <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-5">
-                     <div className="flex items-center gap-2 mb-3">
-                       <span className="text-xl">🔥</span>
-                       <span className="text-base font-semibold text-red-600 dark:text-red-400">Bold</span>
-                     </div>
-                     <p className="text-base">{data.bold}</p>
-                   </div>
-                 )}
-               </div>
-             )}
+{type === "icebreakers" && data && (
+                <div className="space-y-4">
+                  {data.curious && (
+                    <button
+                      onClick={() => onIcebreakerSelect?.(data.curious)}
+                      className="w-full bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-left hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">💭</span>
+                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Curious</span>
+                        </div>
+                        <Send className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{data.curious}</p>
+                    </button>
+                  )}
+                  {data.funny && (
+                    <button
+                      onClick={() => onIcebreakerSelect?.(data.funny)}
+                      className="w-full bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-left hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">😂</span>
+                          <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Funny</span>
+                        </div>
+                        <Send className="w-4 h-4 text-purple-400" />
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{data.funny}</p>
+                    </button>
+                  )}
+                  {data.bold && (
+                    <button
+                      onClick={() => onIcebreakerSelect?.(data.bold)}
+                      className="w-full bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-left hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🔥</span>
+                          <span className="text-sm font-medium text-red-600 dark:text-red-400">Bold</span>
+                        </div>
+                        <Send className="w-4 h-4 text-red-400" />
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{data.bold}</p>
+                    </button>
+                  )}
+                </div>
+              )}
 
             {type === "wavelength" && data?.dimensions && (
                <WavelengthChart 
