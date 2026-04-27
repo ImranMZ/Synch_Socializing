@@ -456,7 +456,7 @@ export default function Home() {
             >
               Continue
             </MagneticButton>
-          </motion.div>
+</motion.div>
         )}
 
         {step === 1.5 && (
