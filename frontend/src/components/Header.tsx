@@ -150,8 +150,10 @@ export default function Header() {
   return (
     <header 
       className="fixed top-4 left-4 bottom-4 w-20 z-50 
-        bg-[#161618] border border-white/8 
-        rounded-xl
+        bg-white/40 dark:bg-[#161618]/40 backdrop-blur-xl
+        border border-white/20 dark:border-white/10 
+        rounded-2xl
+        shadow-2xl shadow-black/10
         flex flex-col items-center py-6"
     >
       <button 
@@ -171,16 +173,16 @@ export default function Header() {
             <button
               key={item.path}
               onClick={() => router.push(item.path)}
-              className={`relative p-3 rounded-lg transition-colors duration-150 w-12 h-12 flex items-center justify-center ${
+              className={`relative p-3 rounded-full transition-all duration-200 w-12 h-12 flex items-center justify-center ${
                 isActive(item.path)
-                  ? "bg-blue-600/10 text-blue-600"
-                  : "text-[#71717A] hover:bg-white/5 hover:text-white"
+                  ? "bg-blue-500/20 text-blue-500 shadow-lg shadow-blue-500/20"
+                  : "text-[#71717A] hover:bg-white/10 hover:text-white"
               }`}
               title={item.label}
             >
               <Icon className="w-5 h-5" />
               {item.badge > 0 ? (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm shadow-red-500/30 border-2 border-[#161618]">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm shadow-red-500/30">
                   {item.badge}
                 </span>
               ) : null}
@@ -194,7 +196,7 @@ export default function Header() {
         {/* Dark mode toggle */}
         <button
           onClick={toggleDarkMode}
-          className="p-3 rounded-lg text-[#71717A] hover:bg-white/5 hover:text-white transition-colors w-12 h-12 flex items-center justify-center"
+          className="p-3 rounded-full text-[#71717A] hover:bg-white/10 hover:text-white transition-all w-12 h-12 flex items-center justify-center"
           title={settings.darkMode ? "Light mode" : "Dark mode"}
         >
           {settings.darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -203,14 +205,14 @@ export default function Header() {
         {/* Profile */}
         <button
           onClick={() => router.push("/profile")}
-          className={`p-0.5 rounded-lg transition-all w-12 h-12 flex items-center justify-center ${
+          className={`p-0.5 rounded-full transition-all w-12 h-12 flex items-center justify-center ${
             isActive("/profile")
-              ? "ring-2 ring-blue-600"
+              ? "ring-2 ring-blue-500 shadow-lg shadow-blue-500/20"
               : "hover:scale-105"
           }`}
           title="Profile"
         >
-          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-700">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
             <img
               src={getAvatarUrl(user.name)}
               alt={user.name}
@@ -222,7 +224,7 @@ export default function Header() {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="p-3 rounded-lg text-red-400 transition-colors w-12 h-12 flex items-center justify-center mt-1 bg-red-500/10 hover:bg-red-500/20"
+          className="p-3 rounded-full text-red-400 transition-all w-12 h-12 flex items-center justify-center mt-1 bg-red-500/10 hover:bg-red-500/20"
           title="Logout"
         >
           <LogOut className="w-5 h-5" />

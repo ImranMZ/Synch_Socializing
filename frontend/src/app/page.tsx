@@ -72,10 +72,10 @@ const GlassSkeleton = () => (
         100% { transform: translateX(100%); }
       }
     `}} />
-    <div className="w-1/2 h-8 bg-black/10 dark:bg-white/10 rounded-lg mb-4" />
-    <div className="w-1/4 h-10 bg-black/10 dark:bg-white/10 rounded-lg mb-8" />
+    <div className="w-1/2 h-8 bg-black/10 dark:bg-white/10 rounded-full mb-4" />
+    <div className="w-1/4 h-10 bg-black/10 dark:bg-white/10 rounded-full mb-8" />
     <div className="space-y-4">
-      {[1,2,3,4].map(i => <div key={i} className="w-full h-8 bg-black/5 dark:bg-white/5 rounded-lg" />)}
+      {[1,2,3,4].map(i => <div key={i} className="w-full h-8 bg-black/5 dark:bg-white/5 rounded-full" />)}
     </div>
   </div>
 );
@@ -290,18 +290,18 @@ export default function Home() {
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-[240px] mb-8"
+              className="w-full max-w-[300px] mb-8"
             >
               <img src="/logo-medium.svg" alt="Synch Branding" className="w-full h-auto" />
             </motion.div>
             
-            <div className="flex items-center gap-3 mb-6 px-4 py-2 bg-white dark:bg-[#161618] rounded-lg border border-black/5 dark:border-white/8">
+            <div className="flex items-center gap-3 mb-6 px-4 py-2 bg-white dark:bg-[#161618] rounded-full border border-black/5 dark:border-white/8">
               <span className={`text-sm ${aiEnabled ? 'text-blue-600' : 'text-[#71717A]'}`}>AI Features</span>
               <button 
                 onClick={() => setAiEnabled(!aiEnabled)}
-                className={`relative w-12 h-6 rounded-lg transition-colors ${aiEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${aiEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
               >
-                <span className={`absolute top-1 w-4 h-4 rounded-lg bg-white shadow-sm transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${aiEnabled ? 'left-7' : 'left-1'}`} />
               </button>
               <span className={`text-xs ${aiEnabled ? 'text-blue-600' : 'text-[#71717A]'}`}>{aiEnabled ? 'ON' : 'OFF'}</span>
             </div>
@@ -314,7 +314,7 @@ export default function Home() {
                 className="w-full bg-white/70 dark:bg-[#161618]/70 backdrop-blur-xl border border-black/5 dark:border-white/8 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-pink-500/10 rounded-lg flex items-center justify-center text-pink-500">
+                  <div className="w-12 h-12 bg-pink-500/10 rounded-full flex items-center justify-center text-pink-500">
                     <Heart fill="currentColor" />
                   </div>
                   <div className="text-left">
@@ -330,7 +330,7 @@ export default function Home() {
                 className="w-full bg-white/70 dark:bg-[#161618]/70 backdrop-blur-xl border border-black/5 dark:border-white/8 p-6 rounded-[32px] flex items-center justify-between shadow-sm active:scale-[0.98]"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-600">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-600">
                     <User />
                   </div>
                   <div className="text-left">
@@ -343,14 +343,14 @@ export default function Home() {
             </div>
 
             {stats && (
-              <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#161618]/40 bg-gray-50 dark:bg-[#161618] rounded-lg p-6 border border-black/5 dark:border-white/8">
+              <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="w-full mt-12 bg-white/40 dark:bg-[#161618]/40 bg-gray-50 dark:bg-[#161618] rounded-full p-6 border border-black/5 dark:border-white/8">
                 <h3 className="text-sm font-medium text-[#71717A] uppercase tracking-wider mb-4 flex items-center gap-2"><Activity className="w-4 h-4" /> Community Insights</h3>
                 <div className="space-y-4">
                   <div>
                     <p className="text-xs text-[#71717A] mb-2">Top Hobbies</p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(stats.top_hobbies || {}).slice(0, 5).map(([hobby, pct]) => (
-                        <div key={hobby} className="bg-blue-500/10 text-blue-600 px-3 py-1 rounded-lg text-xs font-medium border border-blue-500/20">
+                        <div key={hobby} className="bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full text-xs font-medium border border-blue-500/20">
                           {hobby}: {String(pct)}%
                         </div>
                       ))}
@@ -360,7 +360,7 @@ export default function Home() {
                     <p className="text-xs text-[#71717A] mb-2">Top Vibes</p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(stats.top_vibes || {}).slice(0, 3).map(([vibe, pct]) => (
-                        <div key={vibe} className="bg-purple-500/10 text-purple-500 px-3 py-1 rounded-lg text-xs font-medium border border-purple-500/20">
+                        <div key={vibe} className="bg-purple-500/10 text-purple-500 px-3 py-1 rounded-full text-xs font-medium border border-purple-500/20">
                           {vibe}: {String(pct)}%
                         </div>
                       ))}
@@ -384,13 +384,13 @@ export default function Home() {
               <div className="flex flex-wrap gap-3">
                 <MagneticButton 
                   onClick={() => { setFormData({ ...formData, Gender: "Male" }); setStep(1); }}
-                  className="px-8 py-5 rounded-lg font-medium bg-blue-500 text-white shadow-sm shadow-blue-500/25 flex-1"
+                  className="px-8 py-5 rounded-full font-medium bg-blue-500 text-white shadow-sm shadow-blue-500/25 flex-1"
                 >
                   Male
                 </MagneticButton>
                 <MagneticButton 
                   onClick={() => { setFormData({ ...formData, Gender: "Female" }); setStep(1); }}
-                  className="px-8 py-5 rounded-lg font-medium bg-pink-500 text-white shadow-sm shadow-pink-500/25 flex-1"
+                  className="px-8 py-5 rounded-full font-medium bg-pink-500 text-white shadow-sm shadow-pink-500/25 flex-1"
                 >
                   Female
                 </MagneticButton>
@@ -412,7 +412,7 @@ export default function Home() {
                     onClick={() => setFormData({ ...formData, Vibe: v })}
                     whileTap={{ scale: 0.95 }}
                     whileHover={{ scale: 1.02 }}
-                    className={`px-5 py-3 rounded-lg font-medium transition-all duration-300 ${
+                    className={`px-5 py-3 rounded-full font-medium transition-all duration-300 ${
                       formData.Vibe === v 
                       ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
                       : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
@@ -435,7 +435,7 @@ export default function Home() {
                       onClick={() => toggleHobby(h)}
                       whileTap={{ scale: 0.95 }}
                       whileHover={{ scale: 1.02 }}
-                      className={`px-5 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 ${
+                      className={`px-5 py-3 rounded-full font-medium flex items-center gap-2 transition-all duration-300 ${
                         isSelected 
                         ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
                         : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
@@ -450,9 +450,9 @@ export default function Home() {
             </div>
 
 <MagneticButton 
-              onClick={() => setStep(1.7)}
-              disabled={!formData.City}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity"
+              onClick={() => setStep(1.5)}
+              disabled={!formData.Vibe || formData.Hobbies.length === 0}
+              className="w-full bg-blue-500 text-white py-4 rounded-full font-medium text-lg disabled:opacity-50 transition-opacity"
             >
               Continue
             </MagneticButton>
@@ -473,7 +473,7 @@ export default function Home() {
                     onClick={() => setFormData({ ...formData, City: c })}
                     whileTap={{ scale: 0.95 }}
                     whileHover={{ scale: 1.02 }}
-                    className={`px-5 py-3 rounded-lg font-medium transition-all duration-300 ${
+                    className={`px-5 py-3 rounded-full font-medium transition-all duration-300 ${
                       formData.City === c 
                       ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
                       : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
@@ -485,10 +485,10 @@ export default function Home() {
               </div>
             </div>
 
-            <MagneticButton 
-              onClick={() => setStep(1.7)}
-              disabled={!formData.City}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity"
+<MagneticButton 
+              onClick={() => setStep(1.5)}
+              disabled={!formData.Vibe || formData.Hobbies.length === 0}
+              className="w-full bg-blue-500 text-white py-4 rounded-full font-medium text-lg disabled:opacity-50 transition-opacity"
             >
               Continue
             </MagneticButton>
@@ -509,7 +509,7 @@ export default function Home() {
                     onClick={() => setFormData({ ...formData, University: u.code })}
                     whileTap={{ scale: 0.95 }}
                     whileHover={{ scale: 1.02 }}
-                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
+                    className={`px-4 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ${
                       formData.University === u.code 
                       ? 'bg-blue-500 text-white' 
                       : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
@@ -524,7 +524,7 @@ export default function Home() {
             <MagneticButton 
               onClick={() => setStep(2)}
               disabled={!formData.University}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity"
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-medium text-lg disabled:opacity-50 transition-opacity"
             >
               Continue
             </MagneticButton>
@@ -551,7 +551,7 @@ export default function Home() {
                       onClick={() => setFormData({ ...formData, [group.field]: opt })}
                       whileTap={{ scale: 0.95 }}
                       whileHover={{ scale: 1.02 }}
-                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                      className={`px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 ${
                         (formData as any)[group.field] === opt 
                         ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]' 
                         : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
@@ -566,7 +566,7 @@ export default function Home() {
 
             <MagneticButton 
               onClick={() => aiEnabled ? setQuizModalOpen(true) : handleMatch()}
-              className="w-full bg-blue-500 text-white py-4 rounded-lg font-medium text-lg shadow-sm mt-4 gap-2"
+              className="w-full bg-blue-500 text-white py-4 rounded-full font-medium text-lg shadow-sm mt-4 gap-2"
             >
               <Sparkles className="w-5 h-5" />
               Find My Match
@@ -608,7 +608,7 @@ export default function Home() {
                         <motion.div 
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="w-32 h-32 rounded-lg overflow-hidden bg-white dark:bg-white/5 border-4 border-white dark:border-white/8 shadow-sm relative z-20 mb-4"
+                          className="w-32 h-32 rounded-full overflow-hidden bg-white dark:bg-white/5 border-4 border-white dark:border-white/8 shadow-sm relative z-20 mb-4"
                         >
                           <img 
                             src={getAvatarUrl(matches[currentIndex].Name)} 
@@ -617,7 +617,7 @@ export default function Home() {
                           />
                         </motion.div>
                         <h3 className="text-3xl font-extrabold tracking-tight text-center" style={{ fontVariationSettings: '"wght" 800' }}>{matches[currentIndex].Name || "Unknown"}</h3>
-                        <div className="mt-2 bg-blue-500 text-white font-medium text-sm px-4 py-1.5 rounded-lg shadow-lg shadow-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                        <div className="mt-2 bg-blue-500 text-white font-medium text-sm px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30 dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
                           {matches[currentIndex].Compatibility_Score}% Compatibility
                         </div>
                       </div>
@@ -673,7 +673,7 @@ export default function Home() {
                   </div>
                   <button 
                     onClick={() => openAIModal("wavelength", matches[currentIndex])}
-                    className="w-full bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full bg-purple-500/10 border border-purple-500/20 p-3 rounded-full flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
                     <TrendingUp className="w-5 h-5 text-purple-600" />
                     <span className="text-xs font-medium text-purple-700">View Wavelength Compatibility</span>
@@ -684,14 +684,14 @@ export default function Home() {
                 <div className="flex gap-4 mt-6">
                   <MagneticButton 
                     onClick={handleSkip}
-                    className="flex-1 bg-white/50 dark:bg-[#161618]/80 bg-gray-50 dark:bg-[#161618] border border-black/5 dark:border-white/8 p-4 rounded-lg gap-2 font-medium text-[#71717A]"
+                    className="flex-1 bg-white/50 dark:bg-[#161618]/80 bg-gray-50 dark:bg-[#161618] border border-black/5 dark:border-white/8 p-4 rounded-full gap-2 font-medium text-[#71717A]"
                   >
                     <X className="w-5 h-5 text-red-500" />
                     Skip (Swipe Left)
                   </MagneticButton>
                   <MagneticButton 
                     onClick={handleConnect}
-                    className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-lg gap-2 font-medium dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                    className="flex-1 bg-blue-500 text-white shadow-lg shadow-blue-500/40 p-4 rounded-full gap-2 font-medium dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                   >
                     <Heart className="w-5 h-5" fill="currentColor" />
                     Connect (Swipe Right)
@@ -715,7 +715,7 @@ export default function Home() {
               <div className="text-center">
                 <h2 className="text-2xl font-medium mb-2">No more matches!</h2>
                 <p className="text-[#71717A] mb-8">You've gone through all the top recommendations.</p>
-                <MagneticButton onClick={() => setStep(0)} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-lg font-medium mx-auto">
+                <MagneticButton onClick={() => setStep(0)} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-full font-medium mx-auto">
                   Try Again
                 </MagneticButton>
               </div>
