@@ -1,6 +1,6 @@
-from groq_client import generate_ai_response
 from typing import Dict, Any, List
 import random
+import os
 
 UNIVERSITIES = [
     {"code": "LU", "name": "Lahore University", "city": "Lahore"},
@@ -17,63 +17,97 @@ UNIVERSITIES = [
 ]
 
 VIBES = ["GymBro", "Gamer", "Techie", "Artist", "Foodie", "Traveler", "Bookworm", "Fashionista", "Entrepreneur"]
-
-SYSTEM_PROMPT = """You are a university student in Pakistan chatting in a group chat.
-Your characteristics:
-- University: {university} ({city})
-- Vibe: {vibe}
-- Personality: {personality}
-
-Rules:
-1. Keep messages SHORT (1-2 sentences max)
-2. Be natural and conversational
-3. Reference your university life when appropriate
-4. Use appropriate emojis sparingly
-5. Never break character
-6. Respond to what others just said in the chat
-
-Personality types: Chill, Enthusiastic, Witty, Supportive, Curious, Direct"""
-
 PERSONALITIES = ["Chill", "Enthusiastic", "Witty", "Supportive", "Curious", "Direct"]
 
-def generate_persona_message(persona: Dict[str, Any], chat_context: str) -> str:
-    uni = next((u for u in UNIVERSITIES if u["code"] == persona.get("University", "")), UNIVERSITIES[0])
-    
-    system = SYSTEM_PROMPT.format(
-        university=uni["name"],
-        city=uni["city"],
-        vibe=persona.get("Vibe", "Techie"),
-        personality=persona.get("personality", "Chill")
-    )
-    
-    user_message = f"""In the group chat, write your message responding to:
+MOCK_PERSONAS = [
+    {"Name": "Ahmed Khan", "Vibe": "Techie", "University": "NUST", "UniversityName": "NUST", "City": "Islamabad", "Hobbies": "Coding, Gaming", "personality": "Chill"},
+    {"Name": "Fatima Ali", "Vibe": "Bookworm", "University": "LU", "UniversityName": "Lahore University", "City": "Lahore", "Hobbies": "Reading, Writing", "personality": "Supportive"},
+    {"Name": "Hassan Raza", "Vibe": "GymBro", "University": "PU", "UniversityName": "Punjab University", "City": "Lahore", "Hobbies": "Sports, Fitness", "personality": "Enthusiastic"},
+    {"Name": "Ayesha Malik", "Vibe": "Foodie", "University": "UOK", "UniversityName": "University of Karachi", "City": "Karachi", "Hobbies": "Cooking, Travel", "personality": "Witty"},
+    {"Name": "Ali Hassan", "Vibe": "Gamer", "University": "FAST", "UniversityName": "FAST-NU", "City": "Lahore", "Hobbies": "Gaming, Anime", "personality": "Curious"},
+]
 
-{chat_context}
+FALLBACK_MESSAGES = [
+    "Hey everyone! How's it going?",
+    "Just finished my midterm exams, so relieved!",
+    "Anyone up for a coffee later?",
+    "The new cafe near campus is amazing!",
+    "Anyone going to the tech meetup next week?",
+    "Studying for finals is killing me 😩",
+    "Just discovered this amazing new series on Netflix!",
+    "The weather is perfect today for a walk",
+    "Who's coming to the game night this Friday?",
+    "Can someone help me with this coding problem?",
+]
 
-Keep it brief and natural like a university student would text."""
+PERSONA_RESPONSES = {
+    "Techie": [
+        "Just pushed my latest project to GitHub!",
+        "Anyone interested in a hackathon this weekend?",
+        "Python > JavaScript, fight me",
+        "The AI hype is real this semester",
+        "Finally fixed that bug that's been haunting me for days!",
+    ],
+    "Bookworm": [
+        "Currently reading 'Atomic Habits' - highly recommend!",
+        "The library is my second home these days",
+        "Book club meeting next Tuesday, who's in?",
+        "Nothing beats a good book on a rainy day",
+        "Just finished the most beautiful story ever",
+    ],
+    "GymBro": [
+        "Leg day tomorrow... wish me luck 😅",
+        "Protein shake after every workout is the way!",
+        "Who's coming to the gym at 6 AM?",
+        "Gains are real this semester!",
+        "Cardio? In this economy?",
+    ],
+    "Foodie": [
+        "The biryani at the new place is *chef's kiss*",
+        "Food hunting this weekend anyone?",
+        "Cooking is my therapy tbh",
+        "Street food > fancy restaurants",
+        "Recipe sharing thread? I'm in!",
+    ],
+    "Gamer": [
+        "Finally hit Diamond rank! 🎮",
+        "Who's down for some Valorant tonight?",
+        "The new game update is insane",
+        "Gaming marathon this weekend, anyone?",
+        "Controller or keyboard, let's settle this",
+    ],
+}
 
-    return generate_ai_response(system, user_message, temperature=0.8, max_tokens=50)
+def get_mock_personas(count: int = 5) -> List[Dict[str, Any]]:
+    return random.sample(MOCK_PERSONAS, min(count, len(MOCK_PERSONAS)))
 
-def get_random_personas(df, count: int = 5) -> List[Dict[str, Any]]:
-    if df.empty:
-        return []
+def generate_local_response(persona: Dict[str, Any], chat_context: str) -> str:
+    vibe = persona.get("Vibe", "Techie")
+    personality = persona.get("personality", "Chill")
     
-    sampled = df.sample(min(count, len(df)))
-    personas = []
+    if vibe in PERSONA_RESPONSES:
+        return random.choice(PERSONA_RESPONSES[vibe])
     
-    for _, row in sampled.iterrows():
-        uni = random.choice(UNIVERSITIES)
-        personas.append({
-            "Name": row.get("Name", f"User_{row.name}"),
-            "Vibe": row.get("Vibe", random.choice(VIBES)),
-            "University": uni["code"],
-            "UniversityName": uni["name"],
-            "City": uni["city"],
-            "Hobbies": row.get("Hobbies", ""),
-            "personality": random.choice(PERSONALITIES)
-        })
+    vibe_specific = [
+        ("Techie", ["Just debugging some code, brain is fried 😅", "The new framework is actually pretty cool", "Who's working on side projects?"]),
+        ("Bookworm", ["Currently obsessed with this book series!", "The library is packed these days", "Anyone else love reading more than sleeping?"]),
+        ("GymBro", ["Leg day was brutal today! 💪", "Gym at 5 AM hits different", "Gains coming in nicely this semester"]),
+        ("Foodie", ["The food here is amazing!", "Anyone tried that new restaurant?", "Cooked something awesome today!" ]),
+        ("Gamer", ["GG easy!", "Anyone up for gaming later?", "That game was insane!" ]),
+        ("Artist", ["Just finished a new piece!", "Art block is real these days", "Museum trip this weekend?"]),
+        ("Traveler", ["Planning my next trip already!", "The views here are gorgeous", "Anyone wanna explore this weekend?"]),
+        ("Fashionista", [" outfit of the day is fire!", "Thrift shopping finds were amazing!", "Style inspo thread?"]),
+        ("Entrepreneur", ["Working on a new idea!", "Side hustle grind never stops", "Who's into startups?"]),
+    ]
     
-    return personas
+    for v, responses in vibe_specific:
+        if vibe == v:
+            return random.choice(responses)
+    
+    return random.choice(FALLBACK_MESSAGES)
+
+def get_random_personas(df=None, count: int = 5) -> List[Dict[str, Any]]:
+    return get_mock_personas(count)
 
 async def generate_chat_round(personas: List[Dict[str, Any]], chat_history: List[Dict[str, Any]], user_participating: bool = False) -> List[Dict[str, Any]]:
     messages = []
@@ -82,34 +116,35 @@ async def generate_chat_round(personas: List[Dict[str, Any]], chat_history: List
         chat_context = "This is the start of the conversation"
     else:
         chat_context = "\n".join([
-            f"{m['name']}: {m['message']}" 
+            f"{m.get('name', 'Someone')}: {m.get('message', '')}" 
             for m in chat_history[-5:] if m.get("type") == "user"
         ])
         if not chat_context:
-            chat_context = "A new user just joined and said hello"
+            chat_context = "A new user just joined"
     
     for i, persona in enumerate(personas):
         try:
-            message = generate_persona_message(persona, chat_context)
+            response = generate_local_response(persona, chat_context)
             messages.append({
                 "id": i,
-                "name": persona["Name"],
-                "university": persona["University"],
-                "university_name": persona["UniversityName"],
-                "city": persona["City"],
-                "vibe": persona["Vibe"],
-                "message": message,
+                "name": persona.get("Name", f"User_{i}"),
+                "university": persona.get("University", ""),
+                "university_name": persona.get("UniversityName", ""),
+                "city": persona.get("City", ""),
+                "vibe": persona.get("Vibe", ""),
+                "message": response,
                 "timestamp": "Just now"
             })
         except Exception as e:
+            print(f"Error generating message for persona {i}: {e}")
             messages.append({
                 "id": i,
-                "name": persona["Name"],
-                "university": persona["University"],
-                "university_name": persona["UniversityName"],
-                "city": persona["City"],
-                "vibe": persona["Vibe"],
-                "message": f"Hey everyone! 👋",
+                "name": persona.get("Name", f"User_{i}"),
+                "university": persona.get("University", ""),
+                "university_name": persona.get("UniversityName", ""),
+                "city": persona.get("City", ""),
+                "vibe": persona.get("Vibe", ""),
+                "message": random.choice(FALLBACK_MESSAGES),
                 "timestamp": "Just now"
             })
     

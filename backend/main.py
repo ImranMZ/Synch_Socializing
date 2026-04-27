@@ -181,32 +181,36 @@ async def get_hidden_truth(request: QuizWithProfileRequest):
 
 @app.post("/api/chat/personas")
 async def get_chat_personas():
-    from services.chat import get_random_personas
-    personas = get_random_personas(df, 5)
+    from services.chat import get_mock_personas
+    personas = get_mock_personas(5)
     return personas
 
 @app.post("/api/chat/simulate")
 async def simulate_chat_round(request: dict):
     from services.chat import generate_chat_round
-    from services.chat import get_random_personas
+    from services.chat import get_mock_personas
     
-    personas = request.get("personas", [])
-    if not personas:
-        personas = get_random_personas(df, 5)
-    
-    chat_history = request.get("history", [])
-    user_participating = request.get("user_participating", False)
-    user_message = request.get("user_message", "")
-    
-    if user_message:
-        chat_history.append({
-            "type": "user",
-            "name": "You",
-            "message": user_message
-        })
-    
-    messages = await generate_chat_round(personas, chat_history, user_participating)
-    return {"messages": messages, "personas": personas}
+    try:
+        personas = request.get("personas", [])
+        if not personas or len(personas) == 0:
+            personas = get_mock_personas(5)
+        
+        chat_history = request.get("history", [])
+        user_participating = request.get("user_participating", False)
+        user_message = request.get("user_message", "")
+        
+        if user_message:
+            chat_history.append({
+                "type": "user",
+                "name": "You",
+                "message": user_message
+            })
+        
+        messages = await generate_chat_round(personas, chat_history, user_participating)
+        return {"messages": messages, "personas": personas, "success": True}
+    except Exception as e:
+        print(f"Chat simulate error: {e}")
+        return {"messages": [], "personas": get_mock_personas(5), "success": False, "error": str(e)}
 
 @app.post("/api/chat/direct")
 async def direct_chat(request: dict):
