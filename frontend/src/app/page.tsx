@@ -443,7 +443,7 @@ export default function Home() {
                     >
                       {isSelected && <Check className="w-4 h-4" />}
                       {h}
-                    </button>
+                    </motion.button>
                   )
                 })}
               </div>

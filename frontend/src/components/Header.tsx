@@ -184,7 +184,7 @@ export default function Header() {
                   {item.badge}
                 </span>
               ) : null}
-            </motion.button>
+            </button>
           );
         })}
       </nav>
