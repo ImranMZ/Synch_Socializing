@@ -450,8 +450,8 @@ export default function Home() {
             </div>
 
 <MagneticButton 
-              onClick={() => setStep(1.5)}
-              disabled={!formData.Vibe || formData.Hobbies.length === 0}
+              onClick={() => setStep(2)}
+              disabled={!formData.City}
               className="w-full bg-blue-500 text-white py-4 rounded-full font-medium text-lg disabled:opacity-50 transition-opacity"
             >
               Continue
