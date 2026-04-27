@@ -197,20 +197,18 @@ export default function RegisterPage() {
           </button>
 
           <div className="glass dark:glass-dark rounded-3xl p-8 shadow-2xl border border-white/20">
-            <h2 className="text-3xl font-bold text-center mb-2">Pick Your Avatar</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-center mb-6">Choose a style that represents you</p>
+            <h2 className="text-2xl font-medium text-center mb-2">Choose Your Avatar</h2>
+            <p className="text-[#71717A] dark:text-[#A1A1AA] text-center mb-6">Select an avatar that represents you</p>
 
-            <div className="grid grid-cols-5 gap-3 mb-6">
+            <div className="flex justify-center gap-3 mb-6">
               {avatarStyles.map((style, index) => (
-                <motion.button
+                <button
                   key={style.id}
                   onClick={() => setSelectedAvatar(index)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`aspect-square rounded-2xl overflow-hidden bg-white dark:bg-[#2C2C2E] p-2 border-4 transition-all ${
+                  className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
                     selectedAvatar === index
-                      ? "border-blue-500 scale-110 shadow-lg"
-                      : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                      ? "border-blue-600 scale-110"
+                      : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
                   <img
@@ -218,29 +216,24 @@ export default function RegisterPage() {
                     alt={style.name}
                     className="w-full h-full"
                   />
-                </motion.button>
+                </button>
               ))}
             </div>
 
             <motion.div
               key={selectedAvatar}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6 mb-6 flex items-center gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-white dark:bg-[#161618] rounded-lg p-4 mb-6 flex items-center gap-4 border border-black/5 dark:border-white/8"
             >
               <motion.img
                 src={getAvatarUrlWithStyle(avatarStyles[selectedAvatar].id)}
                 alt="Selected"
-                className="w-24 h-24 rounded-2xl"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                className="w-16 h-16 rounded-full"
               />
               <div>
-                <h3 className="text-2xl font-bold">{name}</h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  @{name.toLowerCase().replace(/\s+/g, "")}
-                </p>
-                <p className="text-sm text-blue-500 mt-1">
+                <h3 className="text-lg font-medium dark:text-white">{name}</h3>
+                <p className="text-[#71717A] text-sm">
                   {avatarStyles[selectedAvatar].name} style
                 </p>
               </div>
