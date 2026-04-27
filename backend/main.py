@@ -179,6 +179,35 @@ async def get_hidden_truth(request: QuizWithProfileRequest):
     result = await generate_hidden_truth(request.profile.dict(), quiz_dict)
     return result
 
+@app.post("/api/chat/personas")
+async def get_chat_personas():
+    from services.chat import get_random_personas
+    personas = get_random_personas(df, 5)
+    return personas
+
+@app.post("/api/chat/simulate")
+async def simulate_chat_round(request: dict):
+    from services.chat import generate_chat_round
+    from services.chat import get_random_personas
+    
+    personas = request.get("personas", [])
+    if not personas:
+        personas = get_random_personas(df, 5)
+    
+    chat_history = request.get("history", [])
+    user_participating = request.get("user_participating", False)
+    user_message = request.get("user_message", "")
+    
+    if user_message:
+        chat_history.append({
+            "type": "user",
+            "name": "You",
+            "message": user_message
+        })
+    
+    messages = await generate_chat_round(personas, chat_history, user_participating)
+    return {"messages": messages, "personas": personas}
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='127.0.0.1', port=8001)

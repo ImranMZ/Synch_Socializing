@@ -37,6 +37,19 @@ const DIET_OPTIONS = ["Zabiha Halal", "Anything", "Vegetarian", "Vegan"];
 const SMOKING_OPTIONS = ["No", "Yes", "Occasionally"];
 const COMM_STYLE_OPTIONS = ["Direct", "Empathetic", "Humorous", "Analytical"];
 const CITY_OPTIONS = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Sialkot", "Hyderabad"];
+const UNIVERSITY_OPTIONS = [
+  { code: "LU", name: "Lahore University", city: "Lahore" },
+  { code: "UOK", name: "University of Karachi", city: "Karachi" },
+  { code: "PU", name: "Punjab University", city: "Lahore" },
+  { code: "NUST", name: "NUST", city: "Islamabad" },
+  { code: "GIFT", name: "GIFT University", city: "Islamabad" },
+  { code: "COMSATS", name: "COMSATS", city: "Islamabad" },
+  { code: "FAST", name: "FAST-NU", city: "Lahore" },
+  { code: "BUITEMS", name: "BUITEMS", city: "Karachi" },
+  { code: "MULTANUST", name: "Multan University of Science & Technology", city: "Multan" },
+  { code: "BZU", name: "Bahauddin Zakariya University", city: "Multan" },
+  { code: "USP", name: "University of Southern Punjab", city: "Multan" },
+];
 
 const getVibeColor = (vibe: string) => {
   switch(vibe) {
@@ -78,7 +91,8 @@ export default function Home() {
     Diet: "",
     Smoking: "",
     Comm_Style: "",
-    City: ""
+    City: "",
+    University: ""
   });
 
   const [matches, setMatches] = useState<Match[]>([]);
@@ -431,17 +445,17 @@ export default function Home() {
               </div>
             </div>
 
-            <MagneticButton 
-              onClick={() => setStep(1.5)}
-              disabled={!formData.Vibe || formData.Hobbies.length === 0}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+<MagneticButton 
+              onClick={() => setStep(1.7)}
+              disabled={!formData.City}
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity"
             >
               Continue
             </MagneticButton>
           </motion.div>
         )}
 
-        {step === 1.5 && (
+        {step === 1.7 && (
           <motion.div key="step1.5" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
             <button onClick={() => setStep(1)} className="mb-6 text-blue-600 font-medium">← Back</button>
             <h2 className="text-3xl font-medium mb-8">Where are you located?</h2>
@@ -468,9 +482,45 @@ export default function Home() {
             </div>
 
             <MagneticButton 
-              onClick={() => setStep(2)}
+              onClick={() => setStep(1.7)}
               disabled={!formData.City}
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity dark:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity"
+            >
+              Continue
+            </MagneticButton>
+          </motion.div>
+        )}
+
+        {step === 1.7 && (
+          <motion.div key="step1.7" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="w-full max-w-md">
+            <button onClick={() => setStep(1.5)} className="mb-6 text-blue-600 font-medium">← Back</button>
+            <h2 className="text-3xl font-medium mb-8">Which university?</h2>
+            
+            <div className="mb-10">
+              <h3 className="text-lg font-medium mb-4 text-[#71717A] dark:text-[#A1A1AA]">Select your University</h3>
+              <div className="flex flex-wrap gap-3">
+                {UNIVERSITY_OPTIONS.map(u => (
+                  <motion.button 
+                    key={u.code}
+                    onClick={() => setFormData({ ...formData, University: u.code })}
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
+                      formData.University === u.code 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/8 text-[#71717A] dark:text-[#A1A1AA] hover:border-blue-300 dark:hover:border-white/20'
+                    }`}
+                  >
+                    {u.name}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            <MagneticButton 
+              onClick={() => setStep(2)}
+              disabled={!formData.University}
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-medium text-lg disabled:opacity-50 transition-opacity"
             >
               Continue
             </MagneticButton>
