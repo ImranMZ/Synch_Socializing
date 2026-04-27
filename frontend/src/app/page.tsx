@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { User, Heart, ChevronRight, X, Sparkles, Activity, Check, Lightbulb, TrendingUp, Zap } from "lucide-react";
 import AIInsightModal from "../components/AIInsightModal";
@@ -95,6 +96,7 @@ export default function Home() {
   const [aiModalData, setAiModalData] = useState<any>(null);
   const [aiModalLoading, setAiModalLoading] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
+  const router = useRouter();
 
   const [whyMatchData, setWhyMatchData] = useState<any>(null);
   const [dealbreakersData, setDealbreakersData] = useState<any>(null);
@@ -510,20 +512,11 @@ export default function Home() {
 
             <MagneticButton 
               onClick={() => aiEnabled ? setQuizModalOpen(true) : handleMatch()}
-              className="w-full bg-blue-500 text-white py-4 rounded-lg font-medium text-lg shadow-lg shadow-blue-500/40 mt-4 gap-2 dark:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+              className="w-full bg-blue-500 text-white py-4 rounded-lg font-medium text-lg shadow-sm mt-4 gap-2"
             >
               <Sparkles className="w-5 h-5" />
               Find My Match
             </MagneticButton>
-            
-            {aiEnabled && (
-              <MagneticButton 
-                onClick={fetchHiddenTruth}
-                className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 py-3 rounded-lg font-medium mt-3 gap-2 dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-              >
-                Reveal My Hidden Truth
-              </MagneticButton>
-            )}
           </motion.div>
         )}
 
@@ -652,6 +645,12 @@ export default function Home() {
                 </div>
                 
                 <div className="mt-6 text-center">
+                  <button onClick={() => router.push('/hiddentruth')} className="text-sm text-amber-600 font-medium transition-colors">
+                    Reveal My Hidden Truth
+                  </button>
+                </div>
+                
+                <div className="mt-4 text-center">
                   <button onClick={() => setStep(0)} className="text-sm text-[#71717A] transition-colors">
                     Start Over
                   </button>
