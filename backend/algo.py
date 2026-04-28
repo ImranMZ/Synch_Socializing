@@ -63,16 +63,39 @@ class MatchEngine:
         
         user_gender = user_profile.get('Gender', '')
         if user_gender and user_goal == 'Partner':
+            # Map Male/Female to M/F for filtering against dataset
             if user_gender == 'Male':
-                matches = matches[matches['Gender'] == 'F']
-            elif user_gender == 'Female':
                 matches = matches[matches['Gender'] == 'M']
+            elif user_gender == 'Female':
+                matches = matches[matches['Gender'] == 'F']
         
         if user_profile.get('strict_city') and user_profile.get('City'):
             matches = matches[matches['City'] == user_profile['City']]
             
         matches = matches.head(10).fillna("")
-        return matches.to_dict(orient="records")
+        
+        # Map dataset columns to API response format
+        matches = matches.copy()
+        matches['Profession'] = matches['Job'] if 'Job' in matches.columns else ""
+        matches['Gender'] = matches['Gender'].map({'M': 'Male', 'F': 'Female'}).fillna(matches['Gender'])
+        
+        # Add Location field (City + Province mapping) - format: "City, Province"
+        province_map = {
+            'Lahore': 'Punjab', 'Faisalabad': 'Punjab', 'Rawalpindi': 'Punjab', 'Multan': 'Punjab', 'Sialkot': 'Punjab',
+            'Karachi': 'Sindh', 'Hyderabad': 'Sindh',
+            'Islamabad': 'Capital', 'Peshawar': 'KPK', 'Quetta': 'Balochistan'
+        }
+        matches['province'] = matches['City'].map(province_map).fillna('')
+        matches['Location'] = matches.apply(
+            lambda r: f"{r['City']}, {r['province']}" if r['province'] else r['City'], axis=1
+        )
+        matches.drop(columns=['province'], inplace=True)
+        
+        # Return only fields expected by frontend (per documentation)
+        expected_fields = ['Name', 'Compatibility_Score', 'Gender', 'Age', 'Location', 'Education', 
+                          'Profession', 'Vibe', 'Hobbies', 'Religiosity', 'Smoking', 'Diet', 'Comm_Style']
+        available_fields = [f for f in expected_fields if f in matches.columns]
+        return matches[available_fields].to_dict(orient="records")
     
     def _apply_psychographic_boost(self, user_vector, profile: dict):
         # Convert sparse to dense if needed

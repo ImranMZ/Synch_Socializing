@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synch - Vibe Matching</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Inter, sans-serif; background: #fcf8fa; margin: 0; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const API = 'http://127.0.0.1:8001';
+
+        function Landing() {
+            const [stats, setStats] = useState(null);
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                fetch(`${API}/api/stats`)
+                    .then(r => r.json())
+                    .then(setStats)
+                    .catch(e => setError('Backend not running. Please start backend on port 8001.'));
+            }, []);
+
+            return React.createElement('div', { className: 'min-h-screen flex flex-col items-center justify-center p-8' },
+                React.createElement('div', { className: 'max-w-2xl text-center' },
+                    React.createElement('h1', { className: 'text-6xl font-bold text-gray-900 mb-4' }, 'Synch'),
+                    React.createElement('p', { className: 'text-xl text-gray-600 mb-8' }, 'Find your vibe. Match your wavelength.'),
+                    
+                    error && React.createElement('div', { className: 'bg-red-100 text-red-800 p-4 rounded-xl mb-8' }, error),
+                    
+                    stats && React.createElement('div', { className: 'bg-white rounded-2xl p-6 shadow-sm mb-8' },
+                        React.createElement('p', { className: 'text-5xl font-bold text-black' }, stats.total_users?.toLocaleString()),
+                        React.createElement('p', { className: 'text-gray-600' }, 'people waiting to synch with you')
+                    ),
+
+                    React.createElement('button', {
+                        onClick: () => window.location.href = '/onboarding.html',
+                        className: 'bg-black text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition'
+                    }, 'Start Matching')
+                )
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Landing));
+    </script>
+</body>
+</html>
